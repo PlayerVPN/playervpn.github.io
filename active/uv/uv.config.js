@@ -1,6 +1,6 @@
 self.__uv$config = {
     prefix: '/active/go/',
-    bare:'https://frog.rebdg.com/bare/',
+    bare:'https://mathiscoolpitheratioofacirclecircumfrencetoitsdiameter.3.141.meteomanolo.es/bare/',
     encodeUrl: Ultraviolet.codec.xor.encode,
     decodeUrl: Ultraviolet.codec.xor.decode,
     handler: '/active/uv/uv.handler.js',
