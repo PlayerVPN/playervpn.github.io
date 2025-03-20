@@ -18,17 +18,6 @@
             transition: background-color 0.3s;
         }
 
-        .blur-background {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: url('background-image.jpg'); /* Your blurred background image */
-            filter: blur(8px);
-            z-index: -1;
-        }
-
         .sidebar {
             position: fixed;
             top: 0;
@@ -355,8 +344,7 @@
             text-align: center;
             color: rgba(255, 255, 255, 0.7);
         }
-        
-        /* History modal styles */
+
         #historyModal {
             overflow-y: auto;
         }
@@ -378,7 +366,6 @@
             background-color: rgba(187, 134, 252, 0.2);
         }
 
-        /* Loading bar styles */
         .loading-bar-container {
             position: fixed;
             top: 50px;
@@ -399,21 +386,20 @@
     </style>
 </head>
 <body>
-    <div class="blur-background"></div>
-    
     <div class="particles">
         <canvas id="particlesCanvas"></canvas>
     </div>
 
     <div class="sidebar">
-        <a href="/games.html"><i class="fas fa-home"></i></a>
-        <a href="/apps.html"><i class="fas fa-th"></i></a>
-        <a href="/credits.html" target="_blank" class="trophy-button"><i class="fas fa-trophy"></i></a>
-        <a href="/movies.html"><i class="fas fa-tv"></i></a>
-        <a href="/shows.html"><i class="fas fa-eye"></i></a>
-        <a href="/ai.html"><i class="fas fa-robot"></i></a>
-        <a href="/I.html"><i class="fas fa-info-circle"></i></a>
-        <a href="/rusureaboutenteringthis.html"><i class="fas fa-comments"></i></a>
+        <a href="#" onclick="loadPage('games.html')"><i class="fas fa-home"></i></a>
+        <a href="#" onclick="loadPage('apps.html')"><i class="fas fa-th"></i></a>
+        <a href="credits.html" target="_blank" class="trophy-button"><i class="fas fa-trophy"></i></a>
+        <a href="#" onclick="loadPage('/active/embed.html?url=https://playervpn.github.io/movies')"><i class="fas fa-tv"></i></a>
+        <a href="#" onclick="loadPage('ai.html')"><i class="fas fa-robot"></i></a>
+        <a href="#" onclick="openSettingsModal()"><i class="fas fa-cog"></i></a>
+        <a href="#" onclick="loadPage('/active/embed.html?url=https://playervpn.github.io/shows')"><i class="fas fa-eye"></i></a>
+        <a href="#" onclick="loadPage('I.html')"><i class="fas fa-info-circle"></i></a>
+        <a href="#" onclick="loadPage('rusureaboutenteringthis.html')"><i class="fas fa-comments"></i></a>
     </div>
 
     <div class="topbar">
@@ -442,34 +428,34 @@
         </div>
 
         <div class="grid">
-            <a href="#" onclick="loadPage('https://google.com')">
+            <a href="/active/go/hvtrs8%2F-wuw%2Cgmoelg.aoo%2F" target="_blank">
                 <img src="https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png" alt="Google">
                 Google
             </a>
-            <a href="#" onclick="loadPage('https://youtube.com')">
+            <a href="/active/go/hvtrs8%2F-wuw%2Cymuvu%60e%2Ccmm-" target="_blank">
                 <img src="youtube.png" alt="YouTube">
                 YouTube
             </a>
-            <a href="#" onclick="loadPage('https://spotify.com')">
+            <a href="/active/go/hvtrs8%2F-orel.qpmtkf%7B.aoo%2F" target="_blank">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/2048px-Spotify_logo_without_text.svg.png" alt="Spotify">
                 Spotify
             </a>
-            <a href="#" onclick="loadPage('https://discord.com')">
+            <a href="/active/go/hvtrs8%2F-dksaopd%2Ccmm-" target="_blank">
                 <img src="https://static-00.iconduck.com/assets.00/discord-icon-2048x2048-nnt62s2u.png" alt="Discord">
                 Discord
             </a>
-            <a href="#" onclick="loadPage('https://github.com')">
+            <a href="/active/go/hvtrs8%2F-gktju%60.aoo%2F" target="_blank">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Octicons-mark-github.svg/2048px-Octicons-mark-github.svg.png" alt="GitHub">
                 GitHub
             </a>
-            <a href="#" onclick="loadPage('https://twitch.com')">
+            <a href="/active/go/hvtrs8%2F-wuw%2Ctuivcj.vv-" target="_blank">
                 <img src="twitch.png" alt="Twitch">
                 Twitch
             </a>
         </div>
     </div>
 
-    <iframe id="searchFrame" onload="updateUrlBar()"></iframe>
+    <iframe id="searchFrame"></iframe>
 
     <div class="loading-bar-container">
         <div class="loading-bar"></div>
@@ -535,7 +521,7 @@
                 openThemeModal();
             }
         });
-
+        
         window.addEventListener('touchend', () => {
             touchCount = 0;
         });
@@ -631,17 +617,19 @@
 
         function loadPage(url) {
             const iframe = document.getElementById('searchFrame');
-            const httpsUrl = url.startsWith('http://') ? url.replace('http://', 'https://') : url;
-            iframe.src = `https://yourdomain.com/active/embed.html?url=${encodeURIComponent(httpsUrl)}`; // Use embed for actual loading
+            iframe.src = url;
             iframe.classList.add('active');
-
             startLoadingBar();
             iframe.onload = function() {
-                // Update the URL bar with the real URL while keeping the title constant
-                updateUrlBar(iframe.contentWindow.location.href);
                 stopLoadingBar();
+                updateURL(iframe.src); // Update the URL when the iframe loads
             };
-            addToHistory(httpsUrl);
+            addToHistory(url);
+        }
+
+        function updateURL(url) {
+            const newURL = url.replace("/active/embed.html?url=", "");  // Keep only the embedded URL in the address bar
+            history.pushState({}, '', newURL);
         }
 
         function performSearch() {
@@ -663,25 +651,24 @@
             // Check if the query includes any blocked sites
             if (blockedSites.some(site => query.includes(site))) {
                 iframe.src = "blocked.html"; // Load the blocked page
+                updateURL("blocked.html");
             } else {
-                let urlWithProtocol;
-                // Determine if the search query is a well-formed URL
                 if (/^(https?:\/\/)?[\w.-]+\.[a-z]{2,6}([\/\w .-]*)*\/?$/i.test(query)) {
-                    urlWithProtocol = query.startsWith('http') ? query : 'https://' + query; // Change here to use https
-                    loadPage(urlWithProtocol); // Load the URL as an active page
+                    const urlWithProtocol = query.startsWith('http') ? query : `https://${query}`;
+                    iframe.src = `/active/embed.html?url=${encodeURIComponent(urlWithProtocol)}`;
                 } else {
-                    // Load Bing search for the query
-                    urlWithProtocol = 'https://www.bing.com/search?q=' + encodeURIComponent(query);
-                    loadPage(urlWithProtocol); // Load the search results page
+                    iframe.src = `/active/embed.html?url=https://www.bing.com/search?q=${encodeURIComponent(query)}`;
                 }
+                updateURL(iframe.src); // Update the URL when performing a search
             }
-        }
 
-        function updateUrlBar(url) {
-            const topSearch = document.getElementById('topSearch');
-            topSearch.value = url; // Update the input value in the top bar
-
-            // Keep the title constant; we do not change it here
+            iframe.classList.add('active');
+            startLoadingBar();
+            iframe.onload = function() {
+                stopLoadingBar();
+                updateURL(iframe.src); // Update on load
+            };
+            addToHistory(iframe.src);
         }
 
         function openSettingsModal() {
@@ -696,7 +683,7 @@
 
         function changeTabTitleAndFavicon() {
             const selectedTab = document.getElementById('tabCloak').value;
-            let title = "Orbit Proxy"; // Keep title constant
+            let title = "Orbit Proxy";
             let favicon = null;
 
             switch (selectedTab) {
@@ -722,7 +709,7 @@
                     break;
             }
 
-            document.title = title; // Keep this to ensure the title stays constant
+            document.title = title;
             if (favicon) {
                 let link = document.querySelector("link[rel*='icon']") || document.createElement('link');
                 link.type = 'image/x-icon';
@@ -740,21 +727,20 @@
         function refreshIframe() {
             const iframe = document.getElementById('searchFrame');
             if (iframe) {
-                iframe.src = iframe.src; // Refresh the current iframe page
-                startLoadingBar(); // Start loading bar
+                iframe.src = iframe.src;
+                startLoadingBar();
                 iframe.onload = function() {
-                    updateUrlBar(iframe.contentWindow.location.href); // Update URL bar if iframe refreshes
-                    stopLoadingBar(); // Stop loading bar
+                    stopLoadingBar();
                 };
             }
         }
 
         function goBack() {
-            window.history.back(); // Go back in history
+            window.history.back();
         }
 
         function goForward() {
-            window.history.forward(); // Go forward in history
+            window.history.forward();
         }
 
         function addToHistory(url) {
@@ -763,12 +749,12 @@
             history.unshift(url);
             history = history.slice(0, 20);
             localStorage.setItem('orbit_history', JSON.stringify(history));
-            updateHistoryDisplay(); // Update displayed history
+            updateHistoryDisplay();
         }
 
         function updateHistoryDisplay() {
             const historyList = document.getElementById('historyList');
-            historyList.innerHTML = ''; // Clear previous history
+            historyList.innerHTML = '';
             const history = JSON.parse(localStorage.getItem('orbit_history')) || [];
 
             history.forEach(url => {
@@ -779,7 +765,14 @@
                 listItem.style.borderBottom = '1px solid #330050';
 
                 listItem.onclick = () => {
-                    loadPage(url); // Load the URL directly from history
+                    const iframe = document.getElementById('searchFrame');
+                    iframe.src = url;
+                    iframe.classList.add('active');
+                    startLoadingBar();
+                    iframe.onload = function() {
+                        stopLoadingBar();
+                        updateURL(iframe.src); // Update the URL when loading from history
+                    };
                     closeHistory();
                 };
 
@@ -790,7 +783,7 @@
         function openHistory() {
             const historyModal = document.getElementById('historyModal');
             historyModal.style.display = 'block';
-            updateHistoryDisplay(); // Populate history
+            updateHistoryDisplay();
         }
 
         function closeHistory() {
@@ -810,7 +803,7 @@
 
         function stopLoadingBar() {
             const loadingBar = document.querySelector('.loading-bar');
-            loadingBar.style.width = '100%'; // Complete loading
+            loadingBar.style.width = '100%';
         }
     </script>
 
