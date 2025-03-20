@@ -355,7 +355,7 @@
             text-align: center;
             color: rgba(255, 255, 255, 0.7);
         }
-
+        
         /* History modal styles */
         #historyModal {
             overflow-y: auto;
@@ -406,14 +406,14 @@
     </div>
 
     <div class="sidebar">
-        <a href="#" onclick="loadInternalPage('games.html')"><i class="fas fa-home"></i></a>
-        <a href="#" onclick="loadInternalPage('apps.html')"><i class="fas fa-th"></i></a>
-        <a href="credits.html" target="_blank" class="trophy-button"><i class="fas fa-trophy"></i></a>
-        <a href="#" onclick="loadInternalPage('https://playervpn.github.io/movies')"><i class="fas fa-tv"></i></a>
-        <a href="#" onclick="loadInternalPage('https://playervpn.github.io/shows')"><i class="fas fa-eye"></i></a>
-        <a href="#" onclick="loadInternalPage('ai.html')"><i class="fas fa-robot"></i></a>
-        <a href="#" onclick="loadInternalPage('I.html')"><i class="fas fa-info-circle"></i></a>
-        <a href="#" onclick="loadInternalPage('rusureaboutenteringthis.html')"><i class="fas fa-comments"></i></a>
+        <a href="/games.html"><i class="fas fa-home"></i></a>
+        <a href="/apps.html"><i class="fas fa-th"></i></a>
+        <a href="/credits.html" target="_blank" class="trophy-button"><i class="fas fa-trophy"></i></a>
+        <a href="/movies.html"><i class="fas fa-tv"></i></a>
+        <a href="/shows.html"><i class="fas fa-eye"></i></a>
+        <a href="/ai.html"><i class="fas fa-robot"></i></a>
+        <a href="/I.html"><i class="fas fa-info-circle"></i></a>
+        <a href="/rusureaboutenteringthis.html"><i class="fas fa-comments"></i></a>
     </div>
 
     <div class="topbar">
@@ -442,27 +442,27 @@
         </div>
 
         <div class="grid">
-            <a href="#" onclick="loadInternalPage('https://google.com')">
+            <a href="#" onclick="loadPage('https://google.com')">
                 <img src="https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png" alt="Google">
                 Google
             </a>
-            <a href="#" onclick="loadInternalPage('https://youtube.com')">
+            <a href="#" onclick="loadPage('https://youtube.com')">
                 <img src="youtube.png" alt="YouTube">
                 YouTube
             </a>
-            <a href="#" onclick="loadInternalPage('https://spotify.com')">
+            <a href="#" onclick="loadPage('https://spotify.com')">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/2048px-Spotify_logo_without_text.svg.png" alt="Spotify">
                 Spotify
             </a>
-            <a href="#" onclick="loadInternalPage('https://discord.com')">
+            <a href="#" onclick="loadPage('https://discord.com')">
                 <img src="https://static-00.iconduck.com/assets.00/discord-icon-2048x2048-nnt62s2u.png" alt="Discord">
                 Discord
             </a>
-            <a href="#" onclick="loadInternalPage('https://github.com')">
+            <a href="#" onclick="loadPage('https://github.com')">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Octicons-mark-github.svg/2048px-Octicons-mark-github.svg.png" alt="GitHub">
                 GitHub
             </a>
-            <a href="#" onclick="loadInternalPage('https://twitch.com')">
+            <a href="#" onclick="loadPage('https://twitch.com')">
                 <img src="twitch.png" alt="Twitch">
                 Twitch
             </a>
@@ -629,37 +629,19 @@
 
         loadSavedTheme();
 
-        function loadInternalPage(page) {
-            const iframe = document.getElementById('searchFrame');
-            if (page.startsWith('http://') || page.startsWith('https://')) {
-                loadPage(page); // For external links
-            } else {
-                iframe.src = page; // Load internal pages directly into iframe
-                updateUrlBar(window.location.origin + '/' + page); // Update the URL bar with the internal page path
-                iframe.classList.add('active');
-
-                startLoadingBar(); // Start loading bar when page is loading
-                iframe.onload = function() {
-                    // Update the URL bar with the iframe’s content URL
-                    updateUrlBar(iframe.contentWindow.location.href);
-                    stopLoadingBar(); // Stop loading bar
-                };
-                addToHistory(page);
-            }
-        }
-
         function loadPage(url) {
             const iframe = document.getElementById('searchFrame');
-            const encodedUrl = encodeURIComponent(url);
-            iframe.src = `/active/embed.html?url=${encodedUrl}`; // Use active embed for actual loading
-            updateUrlBar(url); // Update the URL bar to show the real URL
+            const httpsUrl = url.startsWith('http://') ? url.replace('http://', 'https://') : url;
+            iframe.src = `https://yourdomain.com/active/embed.html?url=${encodeURIComponent(httpsUrl)}`; // Use embed for actual loading
+            iframe.classList.add('active');
 
-            startLoadingBar(); // Start loading bar when page is loading
+            startLoadingBar();
             iframe.onload = function() {
-                updateUrlBar(iframe.contentWindow.location.href); // Update the URL bar with the iframe's URL
-                stopLoadingBar(); // Stop loading bar
+                // Update the URL bar with the real URL while keeping the title constant
+                updateUrlBar(iframe.contentWindow.location.href);
+                stopLoadingBar();
             };
-            addToHistory(url);
+            addToHistory(httpsUrl);
         }
 
         function performSearch() {
@@ -698,6 +680,7 @@
         function updateUrlBar(url) {
             const topSearch = document.getElementById('topSearch');
             topSearch.value = url; // Update the input value in the top bar
+
             // Keep the title constant; we do not change it here
         }
 
@@ -796,7 +779,7 @@
                 listItem.style.borderBottom = '1px solid #330050';
 
                 listItem.onclick = () => {
-                    loadInternalPage(url); // Load the URL directly from history
+                    loadPage(url); // Load the URL directly from history
                     closeHistory();
                 };
 
