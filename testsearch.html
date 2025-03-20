@@ -356,6 +356,7 @@
             color: rgba(255, 255, 255, 0.7);
         }
 
+        /* History modal styles */
         #historyModal {
             overflow-y: auto;
         }
@@ -377,6 +378,7 @@
             background-color: rgba(187, 134, 252, 0.2);
         }
 
+        /* Loading bar styles */
         .loading-bar-container {
             position: fixed;
             top: 50px;
@@ -407,10 +409,10 @@
         <a href="#" onclick="loadPage('games.html')"><i class="fas fa-home"></i></a>
         <a href="#" onclick="loadPage('apps.html')"><i class="fas fa-th"></i></a>
         <a href="credits.html" target="_blank" class="trophy-button"><i class="fas fa-trophy"></i></a>
-        <a href="#" onclick="loadPage('/active/embed.html?url=https://playervpn.github.io/movies')"><i class="fas fa-tv"></i></a>
+        <a href="#" onclick="loadPage('https://playervpn.github.io/movies')"><i class="fas fa-tv"></i></a>
         <a href="#" onclick="loadPage('ai.html')"><i class="fas fa-robot"></i></a>
         <a href="#" onclick="openSettingsModal()"><i class="fas fa-cog"></i></a>
-        <a href="#" onclick="loadPage('/active/embed.html?url=https://playervpn.github.io/shows')"><i class="fas fa-eye"></i></a>
+        <a href="#" onclick="loadPage('https://playervpn.github.io/shows')"><i class="fas fa-eye"></i></a>
         <a href="#" onclick="loadPage('I.html')"><i class="fas fa-info-circle"></i></a>
         <a href="#" onclick="loadPage('rusureaboutenteringthis.html')"><i class="fas fa-comments"></i></a>
     </div>
@@ -468,7 +470,7 @@
         </div>
     </div>
 
-    <iframe id="searchFrame"></iframe>
+    <iframe id="searchFrame" onload="updateUrlBar()"></iframe>
 
     <div class="loading-bar-container">
         <div class="loading-bar"></div>
@@ -630,19 +632,17 @@
 
         function loadPage(url) {
             const iframe = document.getElementById('searchFrame');
-            // Ensure we use "https://" as the standard protocol
             const httpsUrl = url.startsWith('http://') ? url.replace('http://', 'https://') : url;
             const encodedUrl = encodeURIComponent(httpsUrl);
             iframe.src = `/active/embed.html?url=${encodedUrl}`; // Use active embed for actual loading
             iframe.classList.add('active');
-
             updateUrlBar(httpsUrl); // Update the URL bar to show the real URL
 
-            startLoadingBar();
+            startLoadingBar(); // Start loading bar when page is loading
             iframe.onload = function() {
-                stopLoadingBar();
-                // Update the URL bar again if needed
-                updateUrlBar(httpsUrl);
+                // When the iframe loads, update the URL bar with the actual URL
+                updateUrlBar(iframe.contentWindow.location.href);
+                stopLoadingBar(); // Stop loading bar
             };
             addToHistory(httpsUrl);
         }
@@ -683,7 +683,7 @@
         function updateUrlBar(url) {
             const topSearch = document.getElementById('topSearch');
             topSearch.value = url; // Update the input value in the top bar
-            document.title = url; // Optional: Simulate updating the title with the URL
+            // Keep the title constant; we do not change it here
         }
 
         function openSettingsModal() {
@@ -698,7 +698,7 @@
 
         function changeTabTitleAndFavicon() {
             const selectedTab = document.getElementById('tabCloak').value;
-            let title = "Orbit Proxy";
+            let title = "Orbit Proxy"; // Keep title constant
             let favicon = null;
 
             switch (selectedTab) {
@@ -724,7 +724,7 @@
                     break;
             }
 
-            document.title = title;
+            document.title = title; // Keep this to ensure the title stays constant
             if (favicon) {
                 let link = document.querySelector("link[rel*='icon']") || document.createElement('link');
                 link.type = 'image/x-icon';
@@ -742,20 +742,21 @@
         function refreshIframe() {
             const iframe = document.getElementById('searchFrame');
             if (iframe) {
-                iframe.src = iframe.src;
-                startLoadingBar();
+                iframe.src = iframe.src; // Refresh the current iframe page
+                startLoadingBar(); // Start loading bar
                 iframe.onload = function() {
-                    stopLoadingBar();
+                    updateUrlBar(iframe.contentWindow.location.href); // Update URL bar if iframe refreshes
+                    stopLoadingBar(); // Stop loading bar
                 };
             }
         }
 
         function goBack() {
-            window.history.back();
+            window.history.back(); // Go back in history
         }
 
         function goForward() {
-            window.history.forward();
+            window.history.forward(); // Go forward in history
         }
 
         function addToHistory(url) {
@@ -764,12 +765,12 @@
             history.unshift(url);
             history = history.slice(0, 20);
             localStorage.setItem('orbit_history', JSON.stringify(history));
-            updateHistoryDisplay();
+            updateHistoryDisplay(); // Update displayed history
         }
 
         function updateHistoryDisplay() {
             const historyList = document.getElementById('historyList');
-            historyList.innerHTML = '';
+            historyList.innerHTML = ''; // Clear previous history
             const history = JSON.parse(localStorage.getItem('orbit_history')) || [];
 
             history.forEach(url => {
@@ -780,7 +781,7 @@
                 listItem.style.borderBottom = '1px solid #330050';
 
                 listItem.onclick = () => {
-                    loadPage(url); // Load the URL directly
+                    loadPage(url); // Load the URL directly from history
                     closeHistory();
                 };
 
@@ -791,7 +792,7 @@
         function openHistory() {
             const historyModal = document.getElementById('historyModal');
             historyModal.style.display = 'block';
-            updateHistoryDisplay();
+            updateHistoryDisplay(); // Populate history
         }
 
         function closeHistory() {
@@ -811,7 +812,7 @@
 
         function stopLoadingBar() {
             const loadingBar = document.querySelector('.loading-bar');
-            loadingBar.style.width = '100%';
+            loadingBar.style.width = '100%'; // Complete loading
         }
     </script>
 
