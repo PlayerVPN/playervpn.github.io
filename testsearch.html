@@ -1,0 +1,869 @@
+<link rel="shortcut icon" type="image/png" href="meto.png">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orbit Proxy</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            color: white;
+            overflow: hidden;
+            background: url('darkness.png') center/cover no-repeat, radial-gradient(circle, #4b0082, #1e0035);
+            transition: background-color 0.3s;
+        }
+
+        .blur-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('background-image.jpg'); /* Your blurred background image */
+            filter: blur(8px);
+            z-index: -1;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 70px;
+            height: 100%;
+            background: #1a002a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            gap: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+            z-index: 11;
+            transition: background 0.3s;
+        }
+
+        .sidebar a {
+            color: white;
+            font-size: 20px;
+            text-decoration: none;
+            transition: transform 0.2s, color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: auto;
+        }
+
+        .sidebar a:hover {
+            transform: scale(1.2);
+            color: #bb86fc;
+        }
+
+        .topbar {
+            position: fixed;
+            top: 0;
+            left: 70px;
+            right: 0;
+            height: 50px;
+            background: #1a002a;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+            border-bottom-left-radius: 20px;
+            transition: background 0.3s;
+        }
+
+        .topbar input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 20px;
+            outline: none;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 14px;
+            margin-left: 20px;
+        }
+
+        .topbar .fa-search {
+            margin-right: 10px;
+            color: #fff;
+        }
+
+        .topbar-icons {
+            display: flex;
+            align-items: center;
+            margin-left: 10px;
+        }
+
+        .topbar-icons i {
+            margin-left: 10px;
+            font-size: 18px;
+            color: white;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .topbar-icons i:hover {
+            color: #bb86fc;
+        }
+
+        .main {
+            margin-left: 70px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: color 0.3s;
+        }
+
+        .search-area {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .search-area img {
+            width: 200px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        .search-bar {
+            width: 600px;
+            position: relative;
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 18px;
+        }
+
+        .search-bar button {
+            background: #bb86fc;
+            border: none;
+            padding: 0 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            color: white;
+            font-size: 18px;
+            transition: background 0.3s;
+        }
+
+        .search-bar button:hover {
+            background: #9a67ea;
+        }
+
+        .grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .grid a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 120px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            text-decoration: none;
+            transition: transform 0.2s, background 0.2s;
+            padding: 10px;
+        }
+
+        .grid a:hover {
+            transform: scale(1.1);
+            background: #bb86fc;
+        }
+
+        .grid img {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 5px;
+            border-radius: 50%;
+        }
+
+        iframe {
+            position: fixed;
+            top: 50px;
+            left: 70px;
+            width: calc(100% - 70px);
+            height: calc(100% - 50px);
+            border: none;
+            background: white;
+            display: none;
+            z-index: 8;
+        }
+
+        iframe.active {
+            display: block;
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .settings-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 12;
+        }
+
+        .settings-modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #1a002a;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+            width: 80%;
+            max-width: 500px;
+            color: white;
+            text-align: center;
+        }
+
+        .settings-modal-content h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .settings-modal-content label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .settings-modal-content select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #330050;
+            color: white;
+            font-size: 16px;
+        }
+
+        .settings-modal-content button {
+            background-color: #bb86fc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .settings-modal-content button:hover {
+            background-color: #9a67ea;
+        }
+
+        .settings-modal-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .theme-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 13;
+        }
+
+        .theme-modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #1a002a;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+            width: 80%;
+            max-width: 400px;
+            color: white;
+            text-align: center;
+        }
+
+        .theme-modal-content h2 {
+            margin-bottom: 20px;
+        }
+
+        .theme-option {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .theme-option:hover {
+            background: #bb86fc;
+        }
+
+        .credit {
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        #historyModal {
+            overflow-y: auto;
+        }
+
+        #historyList {
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        #historyList div {
+            padding: 8px;
+            border-bottom: 1px solid #330050;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        #historyList div:hover {
+            background-color: rgba(187, 134, 252, 0.2);
+        }
+
+        .loading-bar-container {
+            position: fixed;
+            top: 50px;
+            left: 70px;
+            width: calc(100% - 70px);
+            height: 2px;
+            background-color: #000000;
+            z-index: 9;
+            overflow: hidden;
+        }
+
+        .loading-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #64b5f6;
+            transition: width 0.2s linear;
+        }
+    </style>
+</head>
+<body>
+    <div class="blur-background"></div>
+    
+    <div class="particles">
+        <canvas id="particlesCanvas"></canvas>
+    </div>
+
+    <div class="sidebar">
+        <a href="#" onclick="loadPage('games.html')"><i class="fas fa-home"></i></a>
+        <a href="#" onclick="loadPage('apps.html')"><i class="fas fa-th"></i></a>
+        <a href="credits.html" target="_blank" class="trophy-button"><i class="fas fa-trophy"></i></a>
+        <a href="#" onclick="loadPage('/active/embed.html?url=https://playervpn.github.io/movies')"><i class="fas fa-tv"></i></a>
+        <a href="#" onclick="loadPage('ai.html')"><i class="fas fa-robot"></i></a>
+        <a href="#" onclick="openSettingsModal()"><i class="fas fa-cog"></i></a>
+        <a href="#" onclick="loadPage('/active/embed.html?url=https://playervpn.github.io/shows')"><i class="fas fa-eye"></i></a>
+        <a href="#" onclick="loadPage('I.html')"><i class="fas fa-info-circle"></i></a>
+        <a href="#" onclick="loadPage('rusureaboutenteringthis.html')"><i class="fas fa-comments"></i></a>
+    </div>
+
+    <div class="topbar">
+        <i class="fas fa-search"></i>
+        <input type="text" placeholder="Search or type a URL" id="topSearch" onkeydown="handleSearch(event)">
+        <div class="topbar-icons">
+            <i class="fas fa-arrow-left" onclick="goBack()"></i>
+            <i class="fas fa-arrow-right" onclick="goForward()"></i>
+            <i class="fas fa-redo" onclick="refreshIframe()"></i>
+            <i class="fas fa-history" onclick="openHistory()"></i>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="search-area">
+            <img src="meteor.png" alt="Search Bar Image">
+        </div>
+
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Search Google or type a URL">
+            <button onclick="performSearch()">Search</button>
+        </div>
+
+        <div class="credit">
+            Credit to <a href="https://lupinevault.com" target="_blank">https://lupinevault.com</a> (RHW)
+        </div>
+
+        <div class="grid">
+            <a href="#" onclick="loadPage('https://google.com')">
+                <img src="https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png" alt="Google">
+                Google
+            </a>
+            <a href="#" onclick="loadPage('https://youtube.com')">
+                <img src="youtube.png" alt="YouTube">
+                YouTube
+            </a>
+            <a href="#" onclick="loadPage('https://spotify.com')">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/2048px-Spotify_logo_without_text.svg.png" alt="Spotify">
+                Spotify
+            </a>
+            <a href="#" onclick="loadPage('https://discord.com')">
+                <img src="https://static-00.iconduck.com/assets.00/discord-icon-2048x2048-nnt62s2u.png" alt="Discord">
+                Discord
+            </a>
+            <a href="#" onclick="loadPage('https://github.com')">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Octicons-mark-github.svg/2048px-Octicons-mark-github.svg.png" alt="GitHub">
+                GitHub
+            </a>
+            <a href="#" onclick="loadPage('https://twitch.com')">
+                <img src="twitch.png" alt="Twitch">
+                Twitch
+            </a>
+        </div>
+    </div>
+
+    <iframe id="searchFrame"></iframe>
+
+    <div class="loading-bar-container">
+        <div class="loading-bar"></div>
+    </div>
+
+    <div class="settings-modal">
+        <div class="settings-modal-content">
+            <span class="settings-modal-close" onclick="closeSettingsModal()">×</span>
+            <h2>Settings</h2>
+            <label for="tabCloak">Tab Cloak:</label>
+            <select id="tabCloak" onchange="changeTabTitleAndFavicon()">
+                <option value="">Select a tab cloak</option>
+                <option value="schoology">Schoology</option>
+                <option value="edia">Edia</option>
+                <option value="desmos">Desmos</option>
+                <option value="google">Google</option>
+                <option value="google drive">Google Drive</option>
+            </select>
+            <h3>Choose Theme:</h3>
+            <select id="themeSelect" onchange="changeTheme(this.value)">
+                <option value="default">Default</option>
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+                <option value="mocha">Mocha</option>
+                <option value="sun">Sun</option>
+                <option value="blue">Blue</option>
+                <option value="green">Green</option>
+                <option value="purple">Purple</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="historyModal" class="settings-modal">
+        <div class="settings-modal-content">
+            <span class="settings-modal-close" onclick="closeHistory()">×</span>
+            <h2>History</h2>
+            <div id="historyList"></div>
+        </div>
+    </div>
+
+    <div class="theme-modal">
+        <div class="theme-modal-content">
+            <h2>Select Theme</h2>
+            <div class="theme-option" onclick="changeTheme('dark')">Dark Theme</div>
+            <div class="theme-option" onclick="changeTheme('light')">Light Theme</div>
+            <div class="theme-option" onclick="changeTheme('mocha')">Mocha Theme</div>
+            <div class="theme-option" onclick="changeTheme('sun')">Sun Theme</div>
+            <div class="theme-option" onclick="changeTheme('blue')">Blue Theme</div>
+            <div class="theme-option" onclick="changeTheme('green')">Green Theme</div>
+            <div class="theme-option" onclick="changeTheme('purple')">Purple Theme</div>
+            <div class="theme-option" onclick="restartTab()">Restart Tab</div>
+        </div>
+    </div>
+
+    <script>
+        const twoFingerTouchThreshold = 2;
+        let touchCount = 0;
+
+        // Detect touch events
+        window.addEventListener('touchstart', (event) => {
+            touchCount = event.touches.length;
+            if (touchCount >= twoFingerTouchThreshold) {
+                openThemeModal();
+            }
+        });
+
+        window.addEventListener('touchend', () => {
+            touchCount = 0;
+        });
+
+        function openThemeModal() {
+            const themeModal = document.querySelector('.theme-modal');
+            themeModal.style.display = 'block';
+        }
+
+        function closeThemeModal() {
+            const themeModal = document.querySelector('.theme-modal');
+            themeModal.style.display = 'none';
+        }
+
+        function changeTheme(theme) {
+            const body = document.body;
+            const sidebar = document.querySelector('.sidebar');
+            const topbar = document.querySelector('.topbar');
+
+            localStorage.setItem('theme', theme);
+
+            switch (theme) {
+                case 'dark':
+                    body.style.backgroundColor = '#000000';
+                    sidebar.style.backgroundColor = '#000000';
+                    topbar.style.backgroundColor = '#000000';
+                    break;
+                case 'light':
+                    body.style.backgroundColor = '#f0f0f0';
+                    sidebar.style.backgroundColor = '#e0e0e0';
+                    topbar.style.backgroundColor = '#e0e0e0';
+                    break;
+                case 'mocha':
+                    body.style.backgroundColor = '#5c4a46';
+                    sidebar.style.backgroundColor = '#4b3b38';
+                    topbar.style.backgroundColor = '#4b3b38';
+                    break;
+                case 'sun':
+                    body.style.backgroundColor = '#f6d02f';
+                    sidebar.style.backgroundColor = '#e5b800';
+                    topbar.style.backgroundColor = '#e5b800';
+                    break;
+                case 'blue':
+                    body.style.backgroundColor = '#2196F3';
+                    sidebar.style.backgroundColor = '#1976D2';
+                    topbar.style.backgroundColor = '#1976D2';
+                    break;
+                case 'green':
+                    body.style.backgroundColor = '#4CAF50';
+                    sidebar.style.backgroundColor = '#388E3C';
+                    topbar.style.backgroundColor = '#388E3C';
+                    break;
+                case 'purple':
+                    body.style.backgroundColor = '#673AB7';
+                    sidebar.style.backgroundColor = '#5E35B1';
+                    topbar.style.backgroundColor = '#5E35B1';
+                    break;
+                default:
+                    body.style.backgroundColor = '';
+            }
+
+            closeThemeModal();
+            updateThemeStyles(theme);
+        }
+
+        function updateThemeStyles(theme) {
+            const sidebar = document.querySelector('.sidebar');
+            const topbar = document.querySelector('.topbar');
+            const links = document.querySelectorAll('.sidebar a');
+
+            links.forEach(link => {
+                link.style.color = (theme === 'light') ? '#000' : '#fff';
+                link.addEventListener('mouseover', () => {
+                    link.style.color = '#bb86fc';
+                });
+                link.addEventListener('mouseout', () => {
+                    link.style.color = (theme === 'light') ? '#000' : '#fff';
+                });
+            });
+        }
+
+        function restartTab() {
+            window.location.reload();
+        }
+
+        function loadSavedTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'default';
+            changeTheme(savedTheme);
+            document.getElementById('themeSelect').value = savedTheme;
+        }
+
+        loadSavedTheme();
+
+        function loadPage(url) {
+            const iframe = document.getElementById('searchFrame');
+            // Ensure we use "https://" as the standard protocol
+            const httpsUrl = url.startsWith('http://') ? url.replace('http://', 'https://') : url;
+            const encodedUrl = encodeURIComponent(httpsUrl);
+            iframe.src = `/active/embed.html?url=${encodedUrl}`; // Use active embed for actual loading
+            iframe.classList.add('active');
+
+            updateUrlBar(httpsUrl); // Update the URL bar to show the real URL
+
+            startLoadingBar();
+            iframe.onload = function() {
+                stopLoadingBar();
+                // Update the URL bar again if needed
+                updateUrlBar(httpsUrl);
+            };
+            addToHistory(httpsUrl);
+        }
+
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            search(query);
+        }
+
+        function handleSearch(event) {
+            if (event.key === 'Enter') {
+                const query = document.getElementById('topSearch').value.trim();
+                search(query);
+            }
+        }
+
+        function search(query) {
+            const iframe = document.getElementById('searchFrame');
+            const blockedSites = ["pornhub.com", "xvideos.com", "redtube.com", "youjizz.com", "xhamster.com"]; // Add more URLs as necessary
+
+            // Check if the query includes any blocked sites
+            if (blockedSites.some(site => query.includes(site))) {
+                iframe.src = "blocked.html"; // Load the blocked page
+            } else {
+                let urlWithProtocol;
+                // Determine if the search query is a well-formed URL
+                if (/^(https?:\/\/)?[\w.-]+\.[a-z]{2,6}([\/\w .-]*)*\/?$/i.test(query)) {
+                    urlWithProtocol = query.startsWith('http') ? query : 'https://' + query; // Change here to use https
+                    loadPage(urlWithProtocol); // Load the URL as an active page
+                } else {
+                    // Load Bing search for the query
+                    urlWithProtocol = 'https://www.bing.com/search?q=' + encodeURIComponent(query);
+                    loadPage(urlWithProtocol); // Load the search results page
+                }
+            }
+        }
+
+        function updateUrlBar(url) {
+            const topSearch = document.getElementById('topSearch');
+            topSearch.value = url; // Update the input value in the top bar
+            document.title = url; // Optional: Simulate updating the title with the URL
+        }
+
+        function openSettingsModal() {
+            const settingsModal = document.querySelector('.settings-modal');
+            settingsModal.style.display = 'block';
+        }
+
+        function closeSettingsModal() {
+            const settingsModal = document.querySelector('.settings-modal');
+            settingsModal.style.display = 'none';
+        }
+
+        function changeTabTitleAndFavicon() {
+            const selectedTab = document.getElementById('tabCloak').value;
+            let title = "Orbit Proxy";
+            let favicon = null;
+
+            switch (selectedTab) {
+                case "schoology":
+                    title = "Home | Schoology";
+                    favicon = "https://schoology.com/sites/all/themes/schoology_theme/favicon.ico";
+                    break;
+                case "edia":
+                    title = "Edia";
+                    favicon = "https://www.google.com/s2/favicons?domain=www.getedia.com";
+                    break;
+                case "desmos":
+                    title = "Desmos";
+                    favicon = "https://www.desmos.com/favicon.ico";
+                    break;
+                case "google":
+                    title = "Google";
+                    favicon = "https://www.google.com/favicon.ico";
+                    break;
+                case "google drive":
+                    title = "Google Drive";
+                    favicon = "https://ssl.gstatic.com/docs/doclist/images/drive_2022q4_32dp.png";
+                    break;
+            }
+
+            document.title = title;
+            if (favicon) {
+                let link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+                link.type = 'image/x-icon';
+                link.rel = 'shortcut icon';
+                link.href = favicon;
+                document.getElementsByTagName('head')[0].appendChild(link);
+            } else {
+                let link = document.querySelector("link[rel*='icon']");
+                if (link) {
+                    link.parentNode.removeChild(link);
+                }
+            }
+        }
+
+        function refreshIframe() {
+            const iframe = document.getElementById('searchFrame');
+            if (iframe) {
+                iframe.src = iframe.src;
+                startLoadingBar();
+                iframe.onload = function() {
+                    stopLoadingBar();
+                };
+            }
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+
+        function goForward() {
+            window.history.forward();
+        }
+
+        function addToHistory(url) {
+            let history = JSON.parse(localStorage.getItem('orbit_history')) || [];
+            history = history.filter(item => item !== url);
+            history.unshift(url);
+            history = history.slice(0, 20);
+            localStorage.setItem('orbit_history', JSON.stringify(history));
+            updateHistoryDisplay();
+        }
+
+        function updateHistoryDisplay() {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '';
+            const history = JSON.parse(localStorage.getItem('orbit_history')) || [];
+
+            history.forEach(url => {
+                const listItem = document.createElement('div');
+                listItem.textContent = url;
+                listItem.style.cursor = 'pointer';
+                listItem.style.padding = '8px';
+                listItem.style.borderBottom = '1px solid #330050';
+
+                listItem.onclick = () => {
+                    loadPage(url); // Load the URL directly
+                    closeHistory();
+                };
+
+                historyList.appendChild(listItem);
+            });
+        }
+
+        function openHistory() {
+            const historyModal = document.getElementById('historyModal');
+            historyModal.style.display = 'block';
+            updateHistoryDisplay();
+        }
+
+        function closeHistory() {
+            const historyModal = document.getElementById('historyModal');
+            historyModal.style.display = 'none';
+        }
+
+        function startLoadingBar() {
+            const loadingBar = document.querySelector('.loading-bar');
+            loadingBar.style.width = '100%';
+            loadingBar.style.transition = 'none';
+            setTimeout(() => {
+                loadingBar.style.width = '0%';
+                loadingBar.style.transition = 'width 0.2s linear';
+            }, 0);
+        }
+
+        function stopLoadingBar() {
+            const loadingBar = document.querySelector('.loading-bar');
+            loadingBar.style.width = '100%';
+        }
+    </script>
+
+    <script>
+        const canvas = document.getElementById('particlesCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particlesArray = [];
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + Math.random() * canvas.height;
+                this.size = Math.random() * 3 + 1;
+                this.speed = Math.random() * 1 + 0.5;
+            }
+            update() {
+                this.y -= this.speed;
+                if (this.y < 0) {
+                    this.y = canvas.height;
+                    this.x = Math.random() * canvas.width;
+                }
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(187, 134, 252, 0.8)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+
+        function init() {
+            for (let i = 0; i < 100; i++) {
+                particlesArray.push(new Particle());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particlesArray.forEach((particle) => {
+                particle.update();
+                particle.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        init();
+        animate();
+    </script>
+</body>
+</html>
