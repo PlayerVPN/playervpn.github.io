@@ -7,26 +7,37 @@ document.addEventListener('DOMContentLoaded', () => {
     searchForm.addEventListener('submit', (e) => {
         e.preventDefault();
         if (searchInput.value.trim() !== '') {
-            performSearch(searchInput.value);
+            handleSearch(searchInput.value);
         }
     });
 
     searchButton.addEventListener('click', () => {
         if (searchInput.value.trim() !== '') {
-            performSearch(searchInput.value);
+            handleSearch(searchInput.value);
         }
     });
 
     luckyButton.addEventListener('click', () => {
         if (searchInput.value.trim() !== '') {
-            window.location.href = `/active/embed.html?url=${encodeURIComponent(searchInput.value)}&btnI=I%27m+Feeling+Lucky`;
+            window.location.href = `/active/embed.html?url=${encodeURIComponent(`https://${searchInput.value}`)}&btnI=I%27m+Feeling+Lucky`;
         } else {
-            window.location.href = 'file:///home/chronos/u-7efbfa05ab6bcac08130899e6b210cda8682c9cd/MyFiles/Downloads/V2Orbit/G/stretchyman.html';
+            window.location.href = 'elasticman.html';
         }
     });
 
-    function performSearch(query) {
-        window.location.href = `/active/embed.html?url=${encodeURIComponent(query)}`;
+    function handleSearch(input) {
+        if (isValidUrl(input)) {
+            const url = input.startsWith('http') ? input : `https://${input}`;
+            window.location.href = `/active/embed.html?url=${encodeURIComponent(url)}`;
+        } else {
+            const queryUrl = `https://www.bing.com/search?q=${encodeURIComponent(input)}`;
+            window.location.href = `/active/embed.html?url=${encodeURIComponent(queryUrl)}`;
+        }
+    }
+
+    function isValidUrl(input) {
+        const urlPattern = /\./;
+        return urlPattern.test(input);
     }
 
     const voiceSearch = document.querySelector('.voice-search');
@@ -40,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.addEventListener('keydown', (e) => {
-
         if (e.key === '/' && document.activeElement !== searchInput) {
             e.preventDefault();
             searchInput.focus();
@@ -51,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Enter') {
             e.preventDefault();
             if (searchInput.value.trim() !== '') {
-                performSearch(searchInput.value);
+                handleSearch(searchInput.value);
             }
         }
     });
