@@ -124,13 +124,6 @@
             padding: 8px 16px;
         }
 
-        .google-logo {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-
         .browser-actions {
             display: flex;
             margin-right: 10px;
@@ -176,10 +169,6 @@
 
         .url-bar-icon {
             color: #9aa0a6;
-        }
-
-        .browser-menu {
-            display: flex;
         }
 
         .content-area {
@@ -242,7 +231,6 @@
             justify-content: space-between;
             background-color: rgba(60, 64, 67, 0.85);
             backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
             border-radius: 24px;
             padding: 8px 16px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
@@ -250,6 +238,7 @@
             min-width: 420px;
             transition: all 0.3s ease-in-out;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
         }
 
         .toolbar.search-active {
@@ -259,6 +248,12 @@
         .shortcuts {
             display: flex;
             gap: 14px;
+            transition: opacity 0.3s ease;
+        }
+
+        .shortcuts.hidden {
+            opacity: 0;
+            visibility: hidden;
         }
 
         .shortcut {
@@ -277,31 +272,9 @@
             overflow: hidden;
         }
 
-        .shortcut:after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
         .shortcut:hover {
             background-color: #5f6368;
             transform: translateY(-2px);
-        }
-
-        .shortcut:active:after {
-            opacity: 1;
-        }
-
-        .shortcut img {
-            width: 24px;
-            height: 24px;
-            object-fit: contain;
         }
 
         .time-battery {
@@ -397,18 +370,6 @@
             visibility: visible;
         }
 
-        .search-active .shortcuts {
-            visibility: hidden;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-        }
-
-        .search-active .shortcuts [data-shortcut="search"] {
-            visibility: visible;
-            opacity: 1;
-            z-index: 11;
-        }
-
         .toolbar-search-input {
             flex-grow: 1;
             height: 40px;
@@ -443,6 +404,44 @@
             background-color: rgba(255, 255, 255, 0.1);
         }
 
+        .history-page {
+            display: none;
+            background-color: #f0f0f0;
+            color: #333;
+            padding: 20px;
+        }
+
+        .history-search {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .history-search input {
+            flex-grow: 1;
+            height: 40px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 0 10px;
+            font-size: 14px;
+        }
+
+        .delete-history {
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            cursor: pointer;
+        }
+
+        .history-item img {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+        }
     </style>
 </head>
 <body>
@@ -460,7 +459,6 @@
             </div>
         </div>
         <div class="url-bar-container">
-            <img src="https://via.placeholder.com/32" alt="Google Logo" class="google-logo">
             <div class="browser-actions">
                 <div class="action-btn" id="back-btn">
                     <i class="fa-solid fa-arrow-left"></i>
@@ -485,11 +483,18 @@
         <div class="tab-content active" id="tab-content-0">
             <iframe src="/landing" id="frame-0" onload="frameLoaded(0)" data-is-loading="false"></iframe>
         </div>
+        <div class="history-page" id="history-page">
+            <div class="history-search">
+                <input type="text" id="history-search-input" placeholder="Search history...">
+                <button class="delete-history" id="delete-history-btn">Delete History</button>
+            </div>
+            <div id="history-list"></div>
+        </div>
     </div>
 
     <div class="toolbar-container">
         <div class="toolbar" id="toolbar">
-            <div class="shortcuts">
+            <div class="shortcuts" id="shortcuts">
                 <div class="shortcut" data-shortcut="home">
                     <i class="fa-solid fa-house"></i>
                 </div>
@@ -536,7 +541,6 @@
         const maxTabWidth = 240;
         const minTabWidth = 40;
         const defaultTabWidth = 180;
-
         const tabsBar = document.getElementById('tabs-bar');
         const contentArea = document.getElementById('content-area');
         const urlBar = document.getElementById('url-bar');
@@ -545,48 +549,108 @@
         const forwardBtn = document.getElementById('forward-btn');
         const reloadBtn = document.getElementById('reload-btn');
         const loadingBarContainer = document.getElementById('loading-bar-container');
+        const historyPage = document.getElementById('history-page');
+        const historyList = document.getElementById('history-list');
+        const historySearchInput = document.getElementById('history-search-input');
+        const deleteHistoryBtn = document.getElementById('delete-history-btn');
+        const shortcuts = document.getElementById('shortcuts');
 
         urlBar.addEventListener('keydown', handleUrlSubmit);
         newTabBtn.addEventListener('click', createNewTab);
         backBtn.addEventListener('click', goBack);
         forwardBtn.addEventListener('click', goForward);
         reloadBtn.addEventListener('click', reloadPage);
+        historySearchInput.addEventListener('input', filterHistory);
+        deleteHistoryBtn.addEventListener('click', deleteHistory);
+        document.addEventListener('keydown', handleKeyboardShortcuts);
         window.addEventListener('resize', resizeTabs);
+        const searchBtn = document.getElementById('search-btn');
+        const searchClose = document.getElementById('toolbar-search-close');
+
+        searchBtn.addEventListener('click', () => {
+            shortcuts.classList.add('hidden');
+            document.getElementById('toolbar').classList.add('search-active');
+        });
+
+        searchClose.addEventListener('click', () => {
+            shortcuts.classList.remove('hidden');
+            document.getElementById('toolbar').classList.remove('search-active');
+        });
+
+        function handleKeyboardShortcuts(e) {
+            if (e.altKey && e.key === 'h') {
+                e.preventDefault();
+                toggleHistoryPage();
+            }
+        }
+
+        function toggleHistoryPage() {
+            historyPage.style.display = historyPage.style.display === 'none' ? 'block' : 'none';
+            if (historyPage.style.display === 'block') loadHistory();
+        }
+
+        function loadHistory() {
+            const history = JSON.parse(localStorage.getItem('history')) || [];
+            historyList.innerHTML = '';
+            if (history.length === 0) {
+                historyList.innerHTML = '<div>No history found. Enter a site to start saving history.</div>';
+            } else {
+                history.forEach(item => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item';
+                    historyItem.innerHTML = `<img class="tab-favicon" src="${item.favicon}" alt="favicon"> ${item.title} - ${item.url}`;
+                    historyItem.onclick = () => {
+                        createNewTabWithUrl(item.url, item.title);
+                        toggleHistoryPage();
+                    };
+                    historyList.appendChild(historyItem);
+                });
+            }
+        }
+
+        function filterHistory() {
+            const query = historySearchInput.value.toLowerCase();
+            const items = historyList.querySelectorAll('.history-item');
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(query) ? 'flex' : 'none';
+            });
+        }
+
+        function deleteHistory() {
+            if (confirm("Delete history?")) {
+                localStorage.removeItem('history');
+                loadHistory();
+            }
+        }
 
         function handleUrlSubmit(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 let url = urlBar.value.trim();
-
                 if (!url.includes('://') && !url.includes('.')) {
                     url = `/active/embed.html?url=https://www.bing.com/search?q=${encodeURIComponent(url)}`;
-                }
-                else if (!url.includes('://')) {
+                } else if (!url.includes('://')) {
                     url = `/active/embed.html?url=http://${url}`;
-                }
-                else {
+                } else {
                     url = `/active/embed.html?url=${encodeURIComponent(url)}`;
                 }
-
                 const activeFrame = document.getElementById(`frame-${activeTabId}`);
-
                 loadingBarContainer.style.display = 'block';
                 activeFrame.dataset.isLoading = 'true';
-
                 activeFrame.src = url;
+                updateHistory(url);
             }
         }
 
         function frameLoaded(tabId) {
             const frame = document.getElementById(`frame-${tabId}`);
-
             if (frame.dataset.isLoading === 'true') {
                 setTimeout(() => {
                     loadingBarContainer.style.display = 'none';
                     frame.dataset.isLoading = 'false';
                 }, 500);
             }
-
             updateTabInfo(tabId);
         }
 
@@ -594,41 +658,31 @@
             try {
                 const frame = document.getElementById(`frame-${tabId}`);
                 const tab = document.querySelector(`.tab[data-tab-id="${tabId}"]`);
-
                 if (!tab) return;
-
                 let title = 'Vplaza';
                 let frameUrl = frame.src;
                 let favicon = '/favicons/favicon.ico';
-
                 try {
                     if (frame.contentDocument) {
                         title = frame.contentDocument.title || 'Vplaza';
                     }
                 } catch (e) {
-                    
                 }
-
                 if (frameUrl.includes('/active/embed.html?url=')) {
                     const encodedUrl = frameUrl.split('/active/embed.html?url=')[1];
                     frameUrl = decodeURIComponent(encodedUrl);
-
                     const domain = extractDomain(frameUrl);
                     favicon = `https://www.google.com/s2/favicons?domain=${domain}`;
                 } else if (frameUrl.includes('/landing')) {
-                    favicon = '/favicons/favicon.ico';
+                    favicon = '/favicons/vplaza.ico';
                 }
-
                 const tabTitle = tab.querySelector('.tab-title');
                 tabTitle.textContent = title;
-
                 if (parseInt(tabId) === activeTabId) {
                     urlBar.value = frameUrl;
                 }
-
                 const faviconImg = tab.querySelector('.tab-favicon');
                 faviconImg.src = favicon;
-
                 tab.dataset.url = frameUrl;
             } catch (error) {
                 console.error("Error updating tab info:", error);
@@ -638,7 +692,6 @@
         function extractDomain(url) {
             try {
                 if (url === '/index.html') return 'index.html';
-
                 const urlObj = new URL(url);
                 return urlObj.hostname;
             } catch (error) {
@@ -648,7 +701,6 @@
 
         function createNewTab() {
             const tabId = tabCounter++;
-
             const tab = document.createElement('div');
             tab.className = 'tab';
             tab.dataset.tabId = tabId;
@@ -660,20 +712,17 @@
                     <i class="fa-solid fa-xmark fa-xs"></i>
                 </div>
             `;
-
             tabsBar.insertBefore(tab, newTabBtn);
             const tabContent = document.createElement('div');
             tabContent.className = 'tab-content';
             tabContent.id = `tab-content-${tabId}`;
             tabContent.innerHTML = `<iframe src="/landing" id="frame-${tabId}" onload="frameLoaded(${tabId})" data-is-loading="false"></iframe>`;
             contentArea.appendChild(tabContent);
-
             tab.addEventListener('click', () => switchTab(tabId));
             tab.querySelector('.tab-close').addEventListener('click', (e) => {
                 e.stopPropagation();
                 closeTab(tabId);
             });
-
             switchTab(tabId);
             resizeTabs();
         }
@@ -681,36 +730,26 @@
         function switchTab(tabId) {
             const currentActiveTab = document.querySelector('.tab.active');
             const currentActiveContent = document.querySelector('.tab-content.active');
-
             if (currentActiveTab) currentActiveTab.classList.remove('active');
             if (currentActiveContent) currentActiveContent.classList.remove('active');
-
             const selectedTab = document.querySelector(`.tab[data-tab-id="${tabId}"]`);
             const selectedContent = document.getElementById(`tab-content-${tabId}`);
-
             if (selectedTab && selectedContent) {
                 selectedTab.classList.add('active');
                 selectedContent.classList.add('active');
-
                 activeTabId = parseInt(tabId);
-                
-                const iframe = document.getElementById(`frame-${tabId}`);
-                urlBar.value = iframe.src;
+                urlBar.value = selectedTab.dataset.url;
             }
         }
 
         function closeTab(tabId) {
             const tab = document.querySelector(`.tab[data-tab-id="${tabId}"]`);
             const tabContent = document.getElementById(`tab-content-${tabId}`);
-
             const isActive = tab.classList.contains('active');
-
             tab.remove();
             tabContent.remove();
-
             if (isActive) {
                 const remainingTabs = document.querySelectorAll('.tab:not(.new-tab)');
-
                 if (remainingTabs.length > 0) {
                     const firstTabId = remainingTabs[0].dataset.tabId;
                     switchTab(firstTabId);
@@ -718,24 +757,16 @@
                     createNewTab();
                 }
             }
-
             resizeTabs();
         }
 
         function resizeTabs() {
             const tabs = document.querySelectorAll('.tab:not(.new-tab)');
             const availableWidth = tabsBar.clientWidth - newTabBtn.clientWidth - 20;
-
             if (tabs.length === 0) return;
-
-            let widthPerTab = Math.min(
-                maxTabWidth,
-                Math.max(minTabWidth, availableWidth / tabs.length)
-            );
-
+            let widthPerTab = Math.min(maxTabWidth, Math.max(minTabWidth, availableWidth / tabs.length));
             tabs.forEach(tab => {
                 tab.style.width = `${widthPerTab}px`;
-
                 if (widthPerTab < 80) {
                     tab.querySelector('.tab-title').style.display = 'none';
                     if (widthPerTab < 60) {
@@ -752,29 +783,31 @@
 
         function goBack() {
             const activeFrame = document.getElementById(`frame-${activeTabId}`);
-
             loadingBarContainer.style.display = 'block';
             activeFrame.dataset.isLoading = 'true';
-
             activeFrame.contentWindow.history.back();
         }
 
         function goForward() {
             const activeFrame = document.getElementById(`frame-${activeTabId}`);
-
             loadingBarContainer.style.display = 'block';
             activeFrame.dataset.isLoading = 'true';
-
             activeFrame.contentWindow.history.forward();
         }
 
         function reloadPage() {
             const activeFrame = document.getElementById(`frame-${activeTabId}`);
-
             loadingBarContainer.style.display = 'block';
             activeFrame.dataset.isLoading = 'true';
-
             activeFrame.contentWindow.location.reload();
+        }
+
+        function updateHistory(url) {
+            const favicon = document.querySelector(`.tab[data-tab-id="${activeTabId}"] .tab-favicon`).src;
+            const title = document.querySelector(`.tab[data-tab-id="${activeTabId}"] .tab-title`).textContent;
+            const history = JSON.parse(localStorage.getItem('history')) || [];
+            history.push({ favicon, url, title });
+            localStorage.setItem('history', JSON.stringify(history));
         }
 
         function initTabs() {
@@ -783,20 +816,16 @@
                 e.stopPropagation();
                 closeTab(0);
             });
-
             resizeTabs();
         }
 
         function updateDateTime() {
             const now = new Date();
-
             const hours = now.getHours();
             const minutes = now.getMinutes().toString().padStart(2, '0');
             const ampm = hours >= 12 ? 'PM' : 'AM';
             const displayHours = hours % 12 || 12;
-
             document.getElementById('toolbar-time').textContent = `${displayHours}:${minutes} ${ampm}`;
-
             const options = { weekday: 'short', month: 'short', day: 'numeric' };
             const dateStr = now.toLocaleDateString('en-US', options);
             document.getElementById('toolbar-date').textContent = dateStr;
@@ -806,7 +835,6 @@
             if (navigator.getBattery) {
                 navigator.getBattery().then(battery => {
                     updateBatteryUI(battery);
-
                     battery.addEventListener('levelchange', () => updateBatteryUI(battery));
                     battery.addEventListener('chargingchange', () => updateBatteryUI(battery));
                 });
@@ -818,19 +846,12 @@
 
         function updateBatteryUI(battery) {
             const level = Math.floor(battery.level * 100);
-            const batteryIcon = document.getElementById('battery-icon');
-            const batteryFill = document.getElementById('battery-fill');
-
             document.getElementById('battery-percentage').textContent = `${level}%`;
-
+            const batteryFill = document.getElementById('battery-fill');
             batteryFill.style.width = `${level}%`;
-
             if (battery.charging) {
-                batteryIcon.classList.add('battery-charging');
                 batteryFill.style.backgroundColor = '#81c995'; 
             } else {
-                batteryIcon.classList.remove('battery-charging');
-
                 if (level <= 20) {
                     batteryFill.style.backgroundColor = '#ff1400';
                 } else if (level <= 50) {
@@ -851,11 +872,6 @@
 
             document.querySelectorAll('.shortcut').forEach(shortcut => {
                 shortcut.addEventListener('click', function() {
-                    this.style.transform = 'scale(0.9)';
-                    setTimeout(() => {
-                        this.style.transform = '';
-                    }, 150);
-
                     const shortcutType = this.dataset.shortcut;
 
                     if (shortcutType === 'search' && this.id === 'search-btn') {
@@ -874,7 +890,6 @@
 
         function createNewTabWithUrl(url, title) {
             const tabId = tabCounter++;
-
             const tab = document.createElement('div');
             tab.className = 'tab';
             tab.dataset.tabId = tabId;
@@ -948,6 +963,7 @@
                     searchInput.focus();
                 }, 300);
             } else {
+                shortcuts.classList.remove('hidden');
                 toolbar.classList.remove('search-active');
                 searchInput.value = '';
             }
@@ -960,11 +976,9 @@
 
             if (!query.includes('://') && !query.includes('.')) {
                 url = `/active/embed.html?url=https://www.google.com/search?q=${encodeURIComponent(query)}`;
-            }
-            else if (!query.includes('://')) {
+            } else if (!query.includes('://')) {
                 url = `/active/embed.html?url=http://${query}`;
-            }
-            else {
+            } else {
                 url = `/active/embed.html?url=${encodeURIComponent(query)}`;
             }
 
@@ -980,15 +994,6 @@
         }
 
         init();
-
-        document.querySelectorAll('.shortcut').forEach(shortcut => {
-            shortcut.addEventListener('click', function() {
-                this.style.transform = 'scale(0.9)';
-                setTimeout(() => {
-                    this.style.transform = '';
-                }, 150);
-            });
-        });
     </script>
 </body>
 </html>
