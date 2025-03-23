@@ -694,7 +694,8 @@
 
                 activeTabId = parseInt(tabId);
                 
-                urlBar.value = selectedTab.dataset.url;
+                const iframe = document.getElementById(`frame-${tabId}`);
+                urlBar.value = iframe.src;
             }
         }
 
@@ -975,7 +976,6 @@
             updateDateTime();
             updateBattery();
             initToolbarShortcuts();
-
             setInterval(updateDateTime, 60000);
         }
 
