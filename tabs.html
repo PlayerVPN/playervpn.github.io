@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chrome-like Browser</title>
+    <title>Vplaza</title>
+    <link rel="icon" href="/favicons/favicon.ico">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
@@ -26,6 +27,7 @@
         .browser-header {
             background-color: #292a2d;
             border-bottom: 1px solid #3c4043;
+            position: relative;
         }
 
         /* Tabs Bar */
@@ -191,15 +193,40 @@
             height: 100%;
             border: none;
         }
+
+        /* Loading Bar */
+        .loading-bar-container {
+            position: absolute;
+            top: 76px; /* Position just below the URL bar */
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: transparent;
+            overflow: hidden;
+            display: none;
+        }
+
+        .loading-bar {
+            height: 100%;
+            width: 0;
+            background-color: #8ab4f8;
+            animation: loading 2s ease-in-out infinite;
+        }
+
+        @keyframes loading {
+            0% { width: 0; transform: translateX(0); }
+            50% { width: 50%; transform: translateX(50%); }
+            100% { width: 0; transform: translateX(100%); }
+        }
     </style>
 </head>
 <body>
     <div class="browser-header">
         <div class="tabs-bar" id="tabs-bar">
             <!-- Initial tab -->
-            <div class="tab active" data-url="/index.html">
-                <img class="tab-favicon" src="https://www.google.com/s2/favicons?domain=same.new" alt="favicon">
-                <span class="tab-title">Home</span>
+            <div class="tab active" data-tab-id="0" data-url="/index.html">
+                <img class="tab-favicon" src="/favicons/favicon.ico" alt="favicon">
+                <span class="tab-title">Vplaza</span>
                 <div class="tab-close">
                     <i class="fa-solid fa-xmark fa-xs"></i>
                 </div>
@@ -230,11 +257,14 @@
                 </div>
             </div>
         </div>
+        <div class="loading-bar-container" id="loading-bar-container">
+            <div class="loading-bar"></div>
+        </div>
     </div>
     <div class="content-area" id="content-area">
         <!-- Tab contents will be dynamically added here -->
         <div class="tab-content active" id="tab-content-0">
-            <iframe src="/index.html" id="frame-0" onload="updateTabInfo(0)"></iframe>
+            <iframe src="/index.html" id="frame-0" onload="frameLoaded(0)" data-is-loading="false"></iframe>
         </div>
     </div>
 
@@ -254,6 +284,7 @@
         const backBtn = document.getElementById('back-btn');
         const forwardBtn = document.getElementById('forward-btn');
         const reloadBtn = document.getElementById('reload-btn');
+        const loadingBarContainer = document.getElementById('loading-bar-container');
 
         // Event listeners
         urlBar.addEventListener('keydown', handleUrlSubmit);
@@ -284,8 +315,29 @@
 
                 // Update the iframe source
                 const activeFrame = document.getElementById(`frame-${activeTabId}`);
+
+                // Show loading bar
+                loadingBarContainer.style.display = 'block';
+                activeFrame.dataset.isLoading = 'true';
+
+                // Update the iframe source
                 activeFrame.src = url;
             }
+        }
+
+        // Function to handle when iframe is loaded
+        function frameLoaded(tabId) {
+            const frame = document.getElementById(`frame-${tabId}`);
+
+            // Hide loading bar after a short delay to make it visible
+            if (frame.dataset.isLoading === 'true') {
+                setTimeout(() => {
+                    loadingBarContainer.style.display = 'none';
+                    frame.dataset.isLoading = 'false';
+                }, 500);
+            }
+
+            updateTabInfo(tabId);
         }
 
         // Function to update the tab information
@@ -294,29 +346,47 @@
                 const frame = document.getElementById(`frame-${tabId}`);
                 const tab = document.querySelector(`.tab[data-tab-id="${tabId}"]`);
 
-                if (!frame.contentDocument) return; // If cross-origin, cannot access
+                if (!tab) return; // Tab might have been closed
 
-                // Update tab title from iframe document title
-                const title = frame.contentDocument.title || 'New Tab';
-                const tabTitle = tab.querySelector('.tab-title');
-                tabTitle.textContent = title;
+                // Try to get content information
+                let title = 'Vplaza';
+                let frameUrl = frame.src;
+                let favicon = '/favicons/favicon.ico';
+
+                try {
+                    // Try to access contentDocument (might fail due to cross-origin)
+                    if (frame.contentDocument) {
+                        title = frame.contentDocument.title || 'Vplaza';
+                    }
+                } catch (e) {
+                    // Cross-origin access error, use default title
+                }
 
                 // Extract the actual URL from embedded URL
-                let frameUrl = frame.src;
                 if (frameUrl.includes('/active/embed.html?url=')) {
                     const encodedUrl = frameUrl.split('/active/embed.html?url=')[1];
                     frameUrl = decodeURIComponent(encodedUrl);
+
+                    // Get domain for favicon
+                    const domain = extractDomain(frameUrl);
+                    favicon = `https://www.google.com/s2/favicons?domain=${domain}`;
+                } else if (frameUrl.includes('/index.html')) {
+                    // For local index.html, use our custom favicon
+                    favicon = '/favicons/favicon.ico';
                 }
 
-                // Update URL bar
-                if (tabId === activeTabId) {
+                // Update tab title
+                const tabTitle = tab.querySelector('.tab-title');
+                tabTitle.textContent = title;
+
+                // Update URL bar if this is the active tab
+                if (parseInt(tabId) === activeTabId) {
                     urlBar.value = frameUrl;
                 }
 
                 // Update favicon
-                const domain = extractDomain(frameUrl);
-                const favicon = tab.querySelector('.tab-favicon');
-                favicon.src = `https://www.google.com/s2/favicons?domain=${domain}`;
+                const faviconImg = tab.querySelector('.tab-favicon');
+                faviconImg.src = favicon;
 
                 // Store URL in tab's dataset
                 tab.dataset.url = frameUrl;
@@ -330,10 +400,6 @@
             try {
                 // Handle special cases for our local paths
                 if (url === '/index.html') return 'same.new';
-                if (url.startsWith('/active/embed.html')) {
-                    const encodedUrl = url.split('/active/embed.html?url=')[1];
-                    url = decodeURIComponent(encodedUrl);
-                }
 
                 // Extract domain from URL
                 const urlObj = new URL(url);
@@ -353,8 +419,8 @@
             tab.dataset.tabId = tabId;
             tab.dataset.url = '/index.html';
             tab.innerHTML = `
-                <img class="tab-favicon" src="https://www.google.com/s2/favicons?domain=same.new" alt="favicon">
-                <span class="tab-title">New Tab</span>
+                <img class="tab-favicon" src="/favicons/favicon.ico" alt="favicon">
+                <span class="tab-title">Vplaza</span>
                 <div class="tab-close">
                     <i class="fa-solid fa-xmark fa-xs"></i>
                 </div>
@@ -367,7 +433,7 @@
             const tabContent = document.createElement('div');
             tabContent.className = 'tab-content';
             tabContent.id = `tab-content-${tabId}`;
-            tabContent.innerHTML = `<iframe src="/index.html" id="frame-${tabId}" onload="updateTabInfo(${tabId})"></iframe>`;
+            tabContent.innerHTML = `<iframe src="/index.html" id="frame-${tabId}" onload="frameLoaded(${tabId})" data-is-loading="false"></iframe>`;
             contentArea.appendChild(tabContent);
 
             // Attach event listeners
@@ -385,21 +451,26 @@
         // Function to switch between tabs
         function switchTab(tabId) {
             // Deactivate current active tab
-            document.querySelector('.tab.active').classList.remove('active');
-            document.querySelector('.tab-content.active').classList.remove('active');
+            const currentActiveTab = document.querySelector('.tab.active');
+            const currentActiveContent = document.querySelector('.tab-content.active');
+
+            if (currentActiveTab) currentActiveTab.classList.remove('active');
+            if (currentActiveContent) currentActiveContent.classList.remove('active');
 
             // Activate the selected tab
             const selectedTab = document.querySelector(`.tab[data-tab-id="${tabId}"]`);
             const selectedContent = document.getElementById(`tab-content-${tabId}`);
 
-            selectedTab.classList.add('active');
-            selectedContent.classList.add('active');
+            if (selectedTab && selectedContent) {
+                selectedTab.classList.add('active');
+                selectedContent.classList.add('active');
 
-            // Update active tab ID
-            activeTabId = tabId;
+                // Update active tab ID
+                activeTabId = parseInt(tabId);
 
-            // Update URL bar
-            urlBar.value = selectedTab.dataset.url;
+                // Update URL bar
+                urlBar.value = selectedTab.dataset.url;
+            }
         }
 
         // Function to close a tab
@@ -415,15 +486,17 @@
             tabContent.remove();
 
             // If we closed the active tab, switch to another tab
-            if (isActive && document.querySelectorAll('.tab').length > 1) {
-                // Get the first remaining tab
-                const firstTabId = document.querySelector('.tab').dataset.tabId;
-                switchTab(firstTabId);
-            }
+            if (isActive) {
+                const remainingTabs = document.querySelectorAll('.tab:not(.new-tab)');
 
-            // If no tabs left (except the new tab button), create a new tab
-            if (document.querySelectorAll('.tab').length === 0) {
-                createNewTab();
+                if (remainingTabs.length > 0) {
+                    // Get the first remaining tab
+                    const firstTabId = remainingTabs[0].dataset.tabId;
+                    switchTab(firstTabId);
+                } else {
+                    // If no tabs left, create a new tab
+                    createNewTab();
+                }
             }
 
             // Resize remaining tabs
@@ -432,8 +505,10 @@
 
         // Function to resize tabs based on available space
         function resizeTabs() {
-            const tabs = document.querySelectorAll('.tab');
+            const tabs = document.querySelectorAll('.tab:not(.new-tab)');
             const availableWidth = tabsBar.clientWidth - newTabBtn.clientWidth - 20; // 20px for padding
+
+            if (tabs.length === 0) return; // No tabs to resize
 
             // Calculate width per tab
             let widthPerTab = Math.min(
@@ -463,29 +538,52 @@
         // Browser navigation functions
         function goBack() {
             const activeFrame = document.getElementById(`frame-${activeTabId}`);
+
+            // Show loading bar
+            loadingBarContainer.style.display = 'block';
+            activeFrame.dataset.isLoading = 'true';
+
+            // Go back
             activeFrame.contentWindow.history.back();
         }
 
         function goForward() {
             const activeFrame = document.getElementById(`frame-${activeTabId}`);
+
+            // Show loading bar
+            loadingBarContainer.style.display = 'block';
+            activeFrame.dataset.isLoading = 'true';
+
+            // Go forward
             activeFrame.contentWindow.history.forward();
         }
 
         function reloadPage() {
             const activeFrame = document.getElementById(`frame-${activeTabId}`);
+
+            // Show loading bar
+            loadingBarContainer.style.display = 'block';
+            activeFrame.dataset.isLoading = 'true';
+
+            // Reload
             activeFrame.contentWindow.location.reload();
         }
 
-        // Initialize: Add event listeners to the initial tab
-        document.querySelector('.tab').dataset.tabId = "0";
-        document.querySelector('.tab').addEventListener('click', () => switchTab(0));
-        document.querySelector('.tab .tab-close').addEventListener('click', (e) => {
-            e.stopPropagation();
-            closeTab(0);
-        });
+        // Initialize tabs
+        function initTabs() {
+            // Add event listeners to the initial tab
+            document.querySelector('.tab').addEventListener('click', () => switchTab(0));
+            document.querySelector('.tab .tab-close').addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeTab(0);
+            });
 
-        // Initial resize of tabs
-        resizeTabs();
+            // Initial resize of tabs
+            resizeTabs();
+        }
+
+        // Initialize everything
+        initTabs();
     </script>
 </body>
 </html>
