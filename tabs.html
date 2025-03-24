@@ -23,12 +23,35 @@
             display: flex;
             flex-direction: column;
             position: relative;
+            transition: background-color 0.5s; /* Smooth transition for background */
         }
 
         .browser-header {
             background-color: #292a2d;
             border-bottom: 1px solid #3c4043;
             position: relative;
+        }
+
+        .color-picker {
+            display: none; /* Hide by default */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #323639;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+        }
+
+        .color-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-block;
+            cursor: pointer;
+            margin: 5px;
         }
 
         .tabs-bar {
@@ -84,14 +107,6 @@
             color: #e8eaed;
             font-size: 15px;
             flex-grow: 1;
-        }
-
-        .tab-audio {
-            width: 16px;
-            height: 16px;
-            margin-left: 5px;
-            flex-shrink: 0;
-            display: none;
         }
 
         .tab-close {
@@ -458,7 +473,6 @@
             <div class="tab active" data-tab-id="0" data-url="/landing">
                 <img class="tab-favicon" src="/favicons/vplaza.ico" alt="favicon">
                 <span class="tab-title">Vplaza</span>
-                <i class="fa-solid fa-volume-high tab-audio" style="display: none;"></i>
                 <div class="tab-close">
                     <i class="fa-solid fa-xmark fa-xs"></i>
                 </div>
@@ -477,6 +491,9 @@
                 </div>
                 <div class="action-btn" id="reload-btn">
                     <i class="fa-solid fa-rotate-right"></i>
+                </div>
+                <div class="action-btn" id="settings-btn">
+                    <i class="fa-solid fa-gear"></i>
                 </div>
             </div>
             <div class="url-bar-wrapper">
@@ -499,6 +516,15 @@
             </div>
             <div id="history-list"></div>
         </div>
+    </div>
+
+    <div class="color-picker" id="color-picker">
+        <div class="color-circle" style="background-color: white;" data-color="#ffffff"></div>
+        <div class="color-circle" style="background-color: #3a8fd1;" data-color="#3a8fd1"></div>
+        <div class="color-circle" style="background: linear-gradient(90deg, #ff007f, #ff8c00);" data-color="gradient1"></div>
+        <div class="color-circle" style="background: linear-gradient(90deg, #4c1b79, #f770bb);" data-color="gradient2"></div>
+        <div class="color-circle" style="background: linear-gradient(90deg, #f00, #000);" data-color="gradient3"></div>
+        <button id="close-color-picker">Close</button>
     </div>
 
     <div class="toolbar-container">
@@ -563,6 +589,9 @@
         const historySearchInput = document.getElementById('history-search-input');
         const deleteHistoryBtn = document.getElementById('delete-history-btn');
         const shortcuts = document.getElementById('shortcuts');
+        const settingsBtn = document.getElementById('settings-btn');
+        const colorPicker = document.getElementById('color-picker');
+        const closeColorPicker = document.getElementById('close-color-picker');
 
         urlBar.addEventListener('keydown', handleUrlSubmit);
         newTabBtn.addEventListener('click', createNewTab);
@@ -584,6 +613,29 @@
         searchClose.addEventListener('click', () => {
             shortcuts.classList.remove('hidden');
             document.getElementById('toolbar').classList.remove('search-active');
+        });
+
+        settingsBtn.addEventListener('click', () => {
+            colorPicker.style.display = 'block';
+        });
+
+        closeColorPicker.addEventListener('click', () => {
+            colorPicker.style.display = 'none';
+        });
+
+        const applyColor = (color) => {
+            const toolbar = document.getElementById('toolbar');
+            document.body.style.backgroundColor = color;
+            toolbar.style.backgroundColor = color;
+            localStorage.setItem('selectedColor', color);
+            colorPicker.style.display = 'none';
+        };
+
+        const colorCircles = document.querySelectorAll('.color-circle');
+        colorCircles.forEach(circle => {
+            circle.addEventListener('click', function() {
+                applyColor(this.dataset.color);
+            });
         });
 
         function handleKeyboardShortcuts(e) {
@@ -649,8 +701,6 @@
                 activeFrame.dataset.isLoading = 'true';
                 activeFrame.src = url;
                 updateHistory(url);
-                const tab = document.querySelector(`.tab[data-tab-id="${activeTabId}"] .tab-favicon`);
-                tab.src = '/favicons/loading.gif';
             }
         }
 
@@ -660,16 +710,9 @@
                 setTimeout(() => {
                     loadingBarContainer.style.display = 'none';
                     frame.dataset.isLoading = 'false';
-                    updateTabInfo(tabId);
                 }, 500);
             }
-            const audioCheck = frame.contentWindow.document.querySelector('audio');
-            const audioIcon = document.querySelector(`.tab[data-tab-id="${tabId}"] .tab-audio`);
-            if (audioCheck && !audioCheck.paused) {
-                audioIcon.style.display = 'inline';
-            } else {
-                audioIcon.style.display = 'none';
-            }
+            updateTabInfo(tabId);
         }
 
         function updateTabInfo(tabId) {
@@ -726,7 +769,6 @@
             tab.innerHTML = `
                 <img class="tab-favicon" src="/favicons/favicon.ico" alt="favicon">
                 <span class="tab-title">Vplaza</span>
-                <i class="fa-solid fa-volume-high tab-audio" style="display: none;"></i>
                 <div class="tab-close">
                     <i class="fa-solid fa-xmark fa-xs"></i>
                 </div>
@@ -916,7 +958,6 @@
             tab.innerHTML = `
                 <img class="tab-favicon" src="/favicons/favicon.ico" alt="favicon">
                 <span class="tab-title">${title ? title.charAt(0).toUpperCase() + title.slice(1) : 'New Tab'}</span>
-                <i class="fa-solid fa-volume-high tab-audio" style="display: none;"></i>
                 <div class="tab-close">
                     <i class="fa-solid fa-xmark fa-xs"></i>
                 </div>
@@ -1010,6 +1051,13 @@
             updateDateTime();
             updateBattery();
             initToolbarShortcuts();
+
+            // Apply saved color from local storage if available
+            const savedColor = localStorage.getItem('selectedColor');
+            if (savedColor) {
+                applyColor(savedColor);
+            }
+            
             setInterval(updateDateTime, 60000);
         }
 
