@@ -86,6 +86,14 @@
             flex-grow: 1;
         }
 
+        .tab-audio {
+            width: 16px;
+            height: 16px;
+            margin-left: 5px;
+            flex-shrink: 0;
+            display: none;
+        }
+
         .tab-close {
             width: 16px;
             height: 16px;
@@ -450,6 +458,7 @@
             <div class="tab active" data-tab-id="0" data-url="/landing">
                 <img class="tab-favicon" src="/favicons/vplaza.ico" alt="favicon">
                 <span class="tab-title">Vplaza</span>
+                <i class="fa-solid fa-volume-high tab-audio" style="display: none;"></i>
                 <div class="tab-close">
                     <i class="fa-solid fa-xmark fa-xs"></i>
                 </div>
@@ -640,6 +649,8 @@
                 activeFrame.dataset.isLoading = 'true';
                 activeFrame.src = url;
                 updateHistory(url);
+                const tab = document.querySelector(`.tab[data-tab-id="${activeTabId}"] .tab-favicon`);
+                tab.src = '/favicons/loading.gif';
             }
         }
 
@@ -649,9 +660,16 @@
                 setTimeout(() => {
                     loadingBarContainer.style.display = 'none';
                     frame.dataset.isLoading = 'false';
+                    updateTabInfo(tabId);
                 }, 500);
             }
-            updateTabInfo(tabId);
+            const audioCheck = frame.contentWindow.document.querySelector('audio');
+            const audioIcon = document.querySelector(`.tab[data-tab-id="${tabId}"] .tab-audio`);
+            if (audioCheck && !audioCheck.paused) {
+                audioIcon.style.display = 'inline';
+            } else {
+                audioIcon.style.display = 'none';
+            }
         }
 
         function updateTabInfo(tabId) {
@@ -708,6 +726,7 @@
             tab.innerHTML = `
                 <img class="tab-favicon" src="/favicons/favicon.ico" alt="favicon">
                 <span class="tab-title">Vplaza</span>
+                <i class="fa-solid fa-volume-high tab-audio" style="display: none;"></i>
                 <div class="tab-close">
                     <i class="fa-solid fa-xmark fa-xs"></i>
                 </div>
@@ -866,8 +885,8 @@
             const shortcuts = {
                 'home': '/landing',
                 'email': '/active/embed.html?url=https://mail.google.com',
-                'music': '/active/embed.html?url=https://music.youtube.com',
-                'settings': '/active/embed.html?url=chrome://settings'
+                'music': '/active/embed.html?url=https://soundcloud.com/',
+                'settings': 'settings.html'
             };
 
             document.querySelectorAll('.shortcut').forEach(shortcut => {
@@ -897,6 +916,7 @@
             tab.innerHTML = `
                 <img class="tab-favicon" src="/favicons/favicon.ico" alt="favicon">
                 <span class="tab-title">${title ? title.charAt(0).toUpperCase() + title.slice(1) : 'New Tab'}</span>
+                <i class="fa-solid fa-volume-high tab-audio" style="display: none;"></i>
                 <div class="tab-close">
                     <i class="fa-solid fa-xmark fa-xs"></i>
                 </div>
