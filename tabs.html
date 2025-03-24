@@ -219,10 +219,11 @@
 
         .toolbar-container {
             position: absolute;
-            bottom: 20px;
+            bottom: -50px; /* Initially hidden */
             left: 50%;
             transform: translateX(-50%);
             z-index: 1000;
+            transition: bottom 0.3s ease;
         }
 
         .toolbar {
@@ -238,8 +239,6 @@
             min-width: 420px;
             transition: all 0.3s ease-in-out;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            overflow: hidden;
-            cursor: grab; /* Indicates draggable */
         }
 
         .toolbar.search-active {
@@ -537,29 +536,34 @@
     </div>
 
     <script>
-        let isDragging = false;
-        let offsetX, offsetY;
-
-        const toolbar = document.getElementById('toolbar');
+        let isSearchActive = false; // Flag to track search activity
         const toolbarContainer = document.getElementById('toolbar-container');
+        const toolbarSearchInput = document.getElementById('toolbar-search-input');
 
-        toolbar.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            offsetX = e.clientX - toolbarContainer.getBoundingClientRect().left;
-            offsetY = e.clientY - toolbarContainer.getBoundingClientRect().top;
-            toolbar.style.cursor = 'grabbing';
+        toolbarContainer.addEventListener('mouseenter', () => {
+            toolbarContainer.style.bottom = '20px'; // Raise the toolbar on hover
+            clearTimeout(toolbarContainer.timeout); // Clear timeout if re-hovered
         });
 
-        document.addEventListener('mouseup', () => {
-            isDragging = false;
-            toolbar.style.cursor = 'grab';
+        toolbarContainer.addEventListener('mouseleave', () => {
+            toolbarContainer.timeout = setTimeout(() => {
+                if (!isSearchActive) {
+                    toolbarContainer.style.bottom = '-50px'; // Hide the toolbar
+                }
+            }, 2000);
         });
 
-        document.addEventListener('mousemove', (e) => {
-            if (isDragging) {
-                toolbarContainer.style.left = `${e.clientX - offsetX}px`;
-                toolbarContainer.style.top = `${e.clientY - offsetY}px`;
-                toolbarContainer.style.transform = 'none'; // Reset transform
+        toolbarSearchInput.addEventListener('focus', () => {
+            isSearchActive = true; // Keep toolbar visible when searching
+            toolbarContainer.style.bottom = '20px'; // Raise the toolbar
+        });
+
+        toolbarSearchInput.addEventListener('blur', () => {
+            if (toolbarSearchInput.value.trim() === '') {
+                isSearchActive = false;
+                toolbarContainer.timeout = setTimeout(() => {
+                    toolbarContainer.style.bottom = '-50px'; // Hide the toolbar if not searched
+                }, 5000); // Delay hiding after losing focus
             }
         });
 
@@ -986,13 +990,16 @@
 
             if (show) {
                 toolbar.classList.add('search-active');
+                toolbarContainer.style.bottom = '20px'; // Keep it up while searching
                 setTimeout(() => {
-                    searchInput.focus();
-                }, 300);
+                    isSearchActive = true; // Set flag for search activity
+                }, 100);
             } else {
                 shortcuts.classList.remove('hidden');
                 toolbar.classList.remove('search-active');
                 searchInput.value = '';
+                isSearchActive = false;
+                toolbarContainer.style.bottom = '-50px'; // Hide the toolbar
             }
         }
 
