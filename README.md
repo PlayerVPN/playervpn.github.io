@@ -1,4 +1,8 @@
 <div align="center">
+  <h1>WE ARE NO LONGER UPDATING AS OFTEN AS OF NEW PROJECTS OF OURS ARE BEING CREATED!!!</h1>
+</div>
+
+<div align="center">
   <img src="Assets/Banner.jpg" alt="Orbit Proxy Logo" style="width: 300px; height: auto; object-fit: contain;">
 </div>
 
