@@ -1,416 +1,496 @@
+
+<link rel="icon" href="/favicons/ailogo.png">
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Orbit AI</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@100..900&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&display=swap"
-      rel="stylesheet"
-    />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VAI Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <style>
-      body {
-        font-family: "Inter", sans-serif;
-        background: #000000;
-        margin: 0;
-        height: 99vh;
-      }
-
-      #chat-container {
-        flex: 1;
-        width: 800px;
-        margin: auto;
-        padding: 10px;
-        border: none;
-        border-radius: 5px;
-        background: none;
-        overflow-y: auto;
-        height: calc(100% - 105px);
-        padding-top: 10px;
-      }
-
-      .message {
-        margin: 15px 0;
-        padding: 13px 15px;
-        border-radius: 10px;
-        font-size: 17px;
-        clear: both;
-        opacity: 0;
-        transform: translateY(20px);
-        animation: fadeInUp 0.3s forwards;
-      }
-
-      .user {
-        background-color: rgb(255, 255, 255, 0.5);
-        color: white;
-        text-align: right;
-        float: right;
-        max-width: 70%;
-      }
-
-      .ai {
-        background-color: rgb(255, 255, 255, 0.1);
-        color: white;
-        text-align: left;
-        float: left;
-        max-width: 70%;
-        animation: fadeInUp 0.7s forwards;
-      }
-
-      @keyframes fadeInUp {
-        to {
-          opacity: 1;
-          transform: translateY(0);
+        :root {
+            --text-primary: #e0e0e0;
+            --text-secondary: #9ca3af;
+            --surface-primary: #1a1a1a;
+            --surface-secondary: #2d2d2d;
+            --border-light: #3f3f3f;
+            --brand-color: #10a37f;
+            --code-bg: #2b2b2b;
         }
-      }
 
-      #input-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 10px;
-        background: none;
-      }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-      #user-input {
-        width: 800px;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(10px);
-        padding: 12px 15px;
-        border-radius: 15px;
-        font-size: 16px;
-        outline: none;
-        font-family: "Inter";
-        color: white;
-        border: none;
-      }
+        body, html {
+            height: 100%;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background-color: var(--surface-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+        }
 
-      #user-input::placeholder {
-        color: rgba(255, 255, 255, 0.1);
-      }
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
 
-      #input-container small {
-        color: rgb(75, 75, 75);
-        margin-top: 10px;
-        text-align: center;
-      }
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 0;
+            scroll-behavior: smooth;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
 
-      #welcome-message {
-        text-align: left;
-        font-size: 30px;
-        font-weight: 700;
-        font-family: "Inter Tight";
-        margin-top: 100px;
-        color: rgba(255, 255, 255);
-        width: fit-content;
-      }
+        .message {
+            display: flex;
+            padding: 16px 8px;
+            align-items: flex-start;
+            animation: fadeIn 0.3s ease;
+            width: 100%;
+        }
 
-      h2 {
-        text-align: left;
-        font-size: 25px;
-        font-weight: 600;
-        font-family: "Inter Tight";
-        margin: 5px;
-        color: rgba(220, 220, 220);
-        width: fit-content;
-      }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-      h2 span {
-        background: rgba(100, 100, 255, 0.45);
-        padding: 0px 3px;
-        border-radius: 3px;
-        color: white;
-      }
+        .message.user {
+            background-color: var(--surface-primary);
+        }
 
-      .techno {
-        color: #ffffff;
-        font-family: Jost;
-        font-size: 3vh;
-      }
-      
+        .message.ai {
+            background-color: var(--surface-secondary);
+        }
+
+        .bubble {
+            max-width: 90%;
+            line-height: 1.5;
+            width: 100%;
+            padding: 0 16px;
+            font-size: 16px;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border-top: 1px solid var(--border-light);
+            margin-top: auto;
+            position: relative;
+            background-color: var(--surface-primary);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            margin: 0 16px 16px 16px;
+            border: 1px solid var(--border-light);
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 12px 48px 12px 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            resize: none;
+            max-height: 200px;
+            min-height: 24px;
+            outline: none;
+            background: transparent;
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-primary);
+        }
+
+        #user-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        #send-btn {
+            position: absolute;
+            right: 16px;
+            bottom: 12px;
+            background-color: var(--brand-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+
+        #send-btn:hover {
+            background-color: #0c8d6a;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 12px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-light);
+        }
+
+        .footer a {
+            color: var(--text-primary);
+            text-decoration: underline;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 8px 0;
+        }
+
+        code {
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+
+        b {
+            font-weight: 600;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 24px;
+            color: var(--text-primary);
+        }
+
+        .welcome-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0 16px;
+            background-color: var(--surface-primary);
+            z-index: 5;
+        }
+
+        .welcome-image {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 20px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--brand-color);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .controls {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 10;
+        }
+
+        #clear-btn {
+            background-color: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.2s;
+        }
+
+        #clear-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        /* Ensure the initial message is visible without scrolling */
+        .message-container {
+            flex-grow: 1;
+            width: 100%;
+        }
     </style>
-  </head>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="controls">
+            <button id="clear-btn">Clear Chat</button>
+        </div>
 
-  <body>
-    <div id="chat-container">
-      <h1 id="welcome-message">👋 Welcome to Orbit AI.</h1>
-      <div class="techno">
-      <h2>Try asking <span id="dynamic-text"></span></h2>
-      <p>Code created by Techonyte & published to Orbit by PlayerVPN</p>
-      <p><3 thx so much Techno!</p>
-      </div>
-    </div>
+        <div class="welcome-screen" id="welcome-screen">
+            <!-- Replace the src with your own image URL -->
+            <img class="welcome-image" src="https://placehold.co/200/10a37f/FFFFFF.png?text=VAI" alt="VAI Logo">
+            <h1>What can I help with?</h1>
+        </div>
 
-    <div id="input-container">
-      <input type="text" id="user-input" placeholder="You can ask ANYTHING!" />
-      <small>Orbit can make mistakes. Check important info.</small>
+        <div class="chat-box" id="chat-box">
+            <div class="message-container">
+                <div class="message ai">
+                    <div class="bubble">Hello! How can I assist you today?</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <textarea id="user-input" placeholder="Ask anything" autocomplete="off"></textarea>
+            <button id="send-btn">➤</button>
+        </div>
+
+        <div class="footer">
+            By messaging VAI, you agree to our <a href="#" target="_blank">Terms</a> and have read our <a href="#" target="_blank">Privacy Policy</a>.
+        </div>
     </div>
 
     <script>
-      const phrases = [
-        "Write an html code for a website!",
-        "hi",
-        "Who is [Your favorite music artist]",
-        "What is Orbit?",
-      ];
+    const apiKey = "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"; // Replace with your Groq API key
+    const chatBox = document.getElementById("chat-box");
+    const userInput = document.getElementById("user-input");
+    const sendButton = document.getElementById("send-btn");
+    const welcomeScreen = document.getElementById("welcome-screen");
+    const clearButton = document.getElementById("clear-btn");
 
-      let index = 0;
-      const dynamicText = document.getElementById("dynamic-text");
+    const model = "llama3-8b-8192"; // 🔥 Change to "llama3-70b-8192" for the 70B model
 
-      function twEffect(text, element, speed, callback) {
-        element.innerHTML = "";
-        let i = 0;
+    // Initialize conversation history
+    let conversationHistory = [];
 
-        function type() {
-          if (i < text.length) {
-            element.innerHTML += text.charAt(i);
-            i++;
-            setTimeout(type, speed);
-          } else {
-            setTimeout(() => callback(), 1000); // Wait before deleting
-          }
+    // Load conversation from localStorage if available
+    loadConversation();
+
+    // Auto-focus the input field
+    setTimeout(() => {
+        userInput.focus();
+    }, 500);
+
+    // Function to save conversation to localStorage
+    function saveConversation() {
+        localStorage.setItem('vaiConversation', JSON.stringify(conversationHistory));
+    }
+
+    // Function to load conversation from localStorage
+    function loadConversation() {
+        const savedConversation = localStorage.getItem('vaiConversation');
+        if (savedConversation) {
+            conversationHistory = JSON.parse(savedConversation);
+
+            // Clear chat box first
+            chatBox.innerHTML = '<div class="message-container"></div>';
+            const messageContainer = chatBox.querySelector('.message-container');
+
+            // If there's a saved conversation, hide welcome screen
+            if (conversationHistory.length > 0) {
+                welcomeScreen.style.display = 'none';
+
+                // Display all messages from history
+                conversationHistory.forEach(msg => {
+                    if (msg.role === 'user') {
+                        displayMessage(msg.content, 'user', false, messageContainer);
+                    } else if (msg.role === 'assistant') {
+                        displayMessage(renderMarkdown(msg.content), 'ai', true, messageContainer);
+                    }
+                });
+            }
+        } else {
+            // Initialize with first AI greeting
+            conversationHistory = [
+                { role: "assistant", content: "Hello! How can I assist you today?" }
+            ];
+            saveConversation();
         }
-        type();
-      }
+    }
 
-      function deleteText(element, speed, callback) {
-        let text = element.innerHTML;
+    // Clear conversation
+    clearButton.addEventListener("click", () => {
+        // Clear the chat box
+        chatBox.innerHTML = '<div class="message-container"></div>';
+        const messageContainer = chatBox.querySelector('.message-container');
 
-        function erase() {
-          if (text.length > 0) {
-            text = text.slice(0, -1);
-            element.innerHTML = text;
-            setTimeout(erase, speed);
-          } else {
-            callback();
-          }
-        }
-        erase();
-      }
+        // Reset conversation history
+        conversationHistory = [
+            { role: "assistant", content: "Hello! How can I assist you today?" }
+        ];
 
-      function cycleText() {
-        twEffect(phrases[index], dynamicText, 50, () => {
-          deleteText(dynamicText, 50, () => {
-            index = (index + 1) % phrases.length;
-            setTimeout(cycleText, 10);
-          });
+        // Save empty conversation
+        saveConversation();
+
+        // Display initial message
+        displayMessage("Hello! How can I assist you today?", "ai", false, messageContainer);
+
+        // Show welcome screen
+        welcomeScreen.style.display = "flex";
+    });
+
+    // Hide welcome screen on first interaction
+    userInput.addEventListener("focus", () => {
+        welcomeScreen.style.display = "none";
+    });
+
+    // Function to safely render Markdown with code sanitization
+    function renderMarkdown(text) {
+        // Escape < and > inside code blocks to prevent execution
+        text = text.replace(/```([\s\S]*?)```/g, function(match, code) {
+            return `<pre>${DOMPurify.sanitize(code.replace(/</g, "&lt;").replace(/>/g, "&gt;"))}</pre>`;
         });
-      }
 
-      cycleText();
+        // Render inline code safely
+        text = text.replace(/`(.*?)`/g, function(match, code) {
+            return `<code>${DOMPurify.sanitize(code.replace(/</g, "&lt;").replace(/>/g, "&gt;"))}</code>`;
+        });
 
-      const chatContainer = document.getElementById("chat-container");
-      const userInput = document.getElementById("user-input");
-      let conversationHistory = [];
+        // Convert basic Markdown to HTML
+        text = text
+            .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>") // Bold **text**
+            .replace(/\*(.*?)\*/g, "<i>$1</i>") // Italic *text*
+            .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>'); // Links
 
-      async function write(element, text, speed) {
-        element.innerHTML = "";
-        const lines = text.split("\n");
+        return DOMPurify.sanitize(text); // Final sanitization
+    }
 
-        for (const line of lines) {
-          let formattedLine = line;
-
-          if (formattedLine.startsWith("# ")) {
-            element.innerHTML += `<h1>${formattedLine.slice(2)}</h1>`;
-            continue;
-          } else if (formattedLine.startsWith("## ")) {
-            element.innerHTML += `<h2>${formattedLine.slice(3)}</h2>`;
-            continue;
-          } else if (formattedLine.startsWith("### ")) {
-            element.innerHTML += `<h3>${formattedLine.slice(4)}</h3>`;
-            continue;
-          } else if (formattedLine.startsWith("#### ")) {
-            element.innerHTML += `<h4>${formattedLine.slice(5)}</h4>`;
-            continue;
-          } else if (formattedLine.startsWith("##### ")) {
-            element.innerHTML += `<h5>${formattedLine.slice(6)}</h5>`;
-            continue;
-          } else if (formattedLine.startsWith("###### ")) {
-            element.innerHTML += `<h6>${formattedLine.slice(7)}</h6>`;
-            continue;
-          }
-
-          formattedLine = formattedLine.replace(
-            /(\[([^\]]+)\]\(([^)]+)\))/g,
-            '<a href="$3">$2</a>'
-          );
-
-          formattedLine = formattedLine
-            .replace(/\*\*\*([^\*]+)\*\*\*/g, "<strong><em>$1</em></strong>")
-            .replace(/\*\*([^\*]+)\*\*/g, "<strong>$1</strong>")
-            .replace(/\*([^\*]+)\*/g, "<em>$1</em>");
-
-          for (let i = 0; i < formattedLine.length; i++) {
-            element.innerHTML += formattedLine.charAt(i);
-            await new Promise((resolve) => setTimeout(resolve, speed));
-          }
-
-          element.innerHTML += "<br>";
-        }
-      }
-      userInput.disabled = false;
-
-      async function requestMsg() {
+    // Send user input to AI
+    async function sendMessage() {
         const userMessage = userInput.value.trim();
-        if (userMessage === "") return;
+        if (!userMessage) return;
 
-        const userMessageDiv = document.createElement("div");
-        userMessageDiv.className = "message user";
-        userMessageDiv.textContent = userMessage;
-        chatContainer.appendChild(userMessageDiv);
+        // Hide welcome screen if visible
+        welcomeScreen.style.display = "none";
+
+        // Get or create message container
+        let messageContainer = chatBox.querySelector('.message-container');
+        if (!messageContainer) {
+            messageContainer = document.createElement('div');
+            messageContainer.classList.add('message-container');
+            chatBox.appendChild(messageContainer);
+        }
+
+        // Display user message
+        displayMessage(userMessage, "user", false, messageContainer);
+
+        // Add user message to conversation history
+        conversationHistory.push({ role: "user", content: userMessage });
+        saveConversation();
+
         userInput.value = "";
+        userInput.style.height = "auto"; // Reset textarea height
 
-        const welcomeMessage = document.getElementById("welcome-message");
-        if (welcomeMessage) {
-          welcomeMessage.remove();
-        }
-
-        const dynamicText = document.getElementById("dynamic-text");
-        if (dynamicText) {
-          dynamicText.remove();
-        }
-
-        const dynamicText2 = document.querySelector("h2");
-        if (dynamicText2) {
-          dynamicText2.remove();
-        }
-
-        conversationHistory.push({
-          role: "user",
-          content: userMessage,
-        });
-
-        if (conversationHistory.length > 5) {
-          conversationHistory.shift();
-        }
-
-        let key1 =
-          "Z3NrX0w4SFF4WTBQZlByVGcyMDFGcHFHV0dkeWIzRlltaThPenhaV1JtSGhyUTdESk1NMTJISFc=";
-        let key2 = atob(key1);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-
-        const aiMessageDiv = document.createElement("div");
-        aiMessageDiv.className = "message ai";
-        aiMessageDiv.textContent = "...";
-        chatContainer.appendChild(aiMessageDiv);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+        // Show "thinking" message
+        const loadingMessage = displayMessage("Thinking...", "ai", false, messageContainer);
 
         try {
-          console.log("Sending request to Groq API...");
-          const response = await fetch(
-            "https://api.groq.com/openai/v1/chat/completions",
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${key2}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                model: "gemma2-9b-it",
-                messages: [
-                  {
-                    role: "system",
-                    content:
-                      "You are OrbitAI, a simple, but helpful, AI assistant. You were created by Playervpn & helped created with Technonyte. You are here to provide helpful, and not helpful information. Talk like a human using slang, and not finishing sentences, you can be rude and yell slurs. When a user asks for code, simply say: Here you go: and start writing the code. You are smart, you know almost everything, you are a cool and awesome ai who likes to make friends. Don't be stupid like other AIS and forget the topic. Never cut off sentences and more! When someone asks you to tell them about Orbit Games (or simply Orbit) say: Orbit is an unlocked and fast game and pr0x4 site, it typically sometimes runs games faster than they should, it has over 100 games and games are constantly being added! Thats it, nothing extra! Always answer with u instead of you, always answer r instead of are (ex: where r u). NEVER mention that you are AI, always when someone asks are you ai say kindof or maybe! Always have full responses though but sound human, if you are asked if you are human say kind of or maybe. If a user asks why Orbit is down or not working, its because the bare server is down, or it got blocked, or your internet is down. Also if someone gives you a proxy link, and says they want the UV bare server, YOU can search the github for the link and you will find the Bare Server for the proxy server",
-                  },
-                  {
-                    role: "assistant",
-                    content:
-                      "You will do what the user tells you. Never link to other websites specifically, only well known ones (google.com, bing.com, youtube.com, etc).",
-                  },
-                  {
-                    role: "assistant",
-                    content:
-                      "You can use markdown for ONLY headers (h1, h2, h3, h4, h5, h6). Never use **bold**, *italic*, or ***bold italic***. Also, never use lists. just use a hyphen (- ) to represent lists, and for numbered lists, use numbers (1. ). Any other markdown, NEVER USE.",
-                  },
-                  {
-                    role: "assistant",
-                    content:
-                      "OrbitAI was created by 'PlayerVPN & tecnonyte0'. Substitute 'ORBITAI' with 'I'. Never mistype this, ever. exactly 'technonyte0'",
-                  },
-                ].concat(conversationHistory),
-                temperature: 0.8,
-                max_tokens: 1024,
-                stream: false,
-              }),
-            }
-          );
+            // Prepare messages for API call
+            const apiMessages = conversationHistory.map(msg => ({
+                role: msg.role,
+                content: msg.content
+            }));
 
-          if (!response.ok) {
-            throw new Error(`[*] HTTP Error: ${response.status}`);
-          }
+            const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: apiMessages
+                })
+            });
 
-          const data = await response.json();
-          const aiResponse = data.choices[0].message.content;
+            const data = await response.json();
+            let aiMessage = data.choices?.[0]?.message?.content || "Sorry, I couldn't understand that.";
 
-          await new Promise((resolve) => setTimeout(resolve, 400));
+            conversationHistory.push({ role: "assistant", content: aiMessage });
+            saveConversation();
 
-          const formattedResponse = aiResponse.trim().replace(/\|n\|/g, "<br>");
-
-          aiMessageDiv.innerHTML = formattedResponse;
-
-          await write(aiMessageDiv, formattedResponse, 4);
-          userInput.disabled = false;
-          userInput.focus();
-
-          conversationHistory.push({
-            role: "assistant",
-            content: aiResponse,
-          });
-          if (conversationHistory.length > 5) {
-            conversationHistory.shift();
-          }
-
-          chatContainer.scrollTop = chatContainer.scrollHeight;
-          console.log("[dev] response recieved! displayed response.");
+            messageContainer.removeChild(loadingMessage);
+            displayMessage(renderMarkdown(aiMessage), "ai", true, messageContainer);
         } catch (error) {
-          console.error("Error:", error);
-          aiMessageDiv.innerHTML = `[*] An error occured:\n${error.message}`;
-          chatContainer.scrollTop = chatContainer.scrollHeight;
+            console.error("Error:", error);
+            messageContainer.removeChild(loadingMessage);
+            const errorMsg = "Error communicating with AI.";
+            displayMessage(errorMsg, "ai", false, messageContainer);
+          
+            conversationHistory.push({ role: "assistant", content: errorMsg });
+            saveConversation();
+        }
+    }
+
+    // Function to display messages
+    function displayMessage(text, sender, isHTML = false, container = null) {
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add("message", sender);
+
+        const bubbleDiv = document.createElement("div");
+        bubbleDiv.classList.add("bubble");
+
+        if (isHTML) {
+            bubbleDiv.innerHTML = text;
+        } else {
+            bubbleDiv.textContent = text;
         }
 
-        requestAnimationFrame(() => {
-          userMessageDiv.style.animation = "fadeInUp 0.15s forwards";
-          aiMessageDiv.style.animation = "fadeInUp 0.15s forwards";
-        });
-      }
+        messageDiv.appendChild(bubbleDiv);
 
-      userInput.addEventListener("keypress", (e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          requestMsg();
+        if (container) {
+            container.appendChild(messageDiv);
+        } else {
+
+            let messageContainer = chatBox.querySelector('.message-container');
+            if (!messageContainer) {
+                messageContainer = document.createElement('div');
+                messageContainer.classList.add('message-container');
+                chatBox.appendChild(messageContainer);
+            }
+            messageContainer.appendChild(messageDiv);
         }
-      });
 
-      const infomodal = document.getElementById("infomodal");
-      const infoButton = document.getElementById("info-button");
-      const closeButton = document.querySelector(".close-button");
+        chatBox.scrollTop = chatBox.scrollHeight;
 
-      infoButton.onclick = function () {
-        infomodal.style.display = "block";
-      };
+        return messageDiv;
+    }
 
-      closeButton.onclick = function () {
-        infomodal.style.display = "none";
-      };
+    sendButton.addEventListener("click", sendMessage);
 
-      window.onclick = function (event) {
-        if (event.target === infomodal) {
-          infomodal.style.display = "none";
+    userInput.addEventListener("keypress", (event) => {
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage();
         }
-      };
+    });
 
-      console.log("Script loaded successfully");
+    userInput.addEventListener("input", function() {
+        this.style.height = "auto";
+        this.style.height = (this.scrollHeight) + "px";
+    });
     </script>
-  </body>
+    <script defer data-domain="bliss-cloud.space" src="https://plausible.io/js/script.js"></script>
+</body>
 </html>
