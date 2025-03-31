@@ -1,6 +1,6 @@
 self.__uv$config = {
     prefix: '/active/go/',
-    bare:'https://mathinformativebrutusiscool.potomacriversafetycommittee.org/bare/',
+    bare:'https://dylans-nirbytes-sucks-handmade-nolife-list.stevenzawaski.com//bare/',
     encodeUrl: Ultraviolet.codec.xor.encode,
     decodeUrl: Ultraviolet.codec.xor.decode,
     handler: '/active/uv/uv.handler.js',
